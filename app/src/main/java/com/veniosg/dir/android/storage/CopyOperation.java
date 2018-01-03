@@ -28,7 +28,7 @@ import java.io.FileOutputStream;
 import java.util.List;
 
 import static com.veniosg.dir.android.util.FileUtils.createUniqueCopyName;
-import static com.veniosg.dir.android.util.FileUtils.getFileCount;
+import static com.veniosg.dir.android.util.FileUtils.countFilesUnder;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
 import static com.veniosg.dir.android.util.Notifier.showCopyDoneNotification;
 import static com.veniosg.dir.android.util.Notifier.showCopyProgressNotification;
@@ -44,11 +44,11 @@ public class CopyOperation extends FileOperation<CopyArguments> {
     }
 
     @Override
-    protected boolean doOperation(CopyArguments args) {
+    protected boolean operate(CopyArguments args) {
         List<FileHolder> files = args.getFilesToCopy();
         File to = args.getTarget();
 
-        int fileCount = getFileCount(files);
+        int fileCount = countFilesUnder(files);
         int filesCopied = 0;
 
         // Try copying

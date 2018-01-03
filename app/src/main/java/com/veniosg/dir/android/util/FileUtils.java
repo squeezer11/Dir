@@ -169,7 +169,7 @@ public class FileUtils {
         return fileCount;
     }
 
-    public static int getFileCount(List<FileHolder> list) {
+    public static int countFilesUnder(List<FileHolder> list) {
         int fileCount = 0;
         for (FileHolder fh : list) {
             fileCount += countFilesUnder(fh.getFile());

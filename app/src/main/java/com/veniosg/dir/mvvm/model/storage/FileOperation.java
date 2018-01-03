@@ -38,7 +38,7 @@ public abstract class FileOperation<A extends FileOperation.Arguments> {
 
     public final void invoke(A args) {
         onStartOperation(args);
-        boolean normalSucceeded = doOperation(args);
+        boolean normalSucceeded = operate(args);
         boolean failedBecauseOfNoAccess = !normalSucceeded &&
                 needsWriteAccess() &&
                 !storageAccessHelperCompat.hasWriteAccess(args.getTarget());
@@ -72,7 +72,7 @@ public abstract class FileOperation<A extends FileOperation.Arguments> {
     /**
      * @return Whether the operation was successful.
      */
-    protected abstract boolean doOperation(A args);
+    protected abstract boolean operate(A args);
 
     /**
      * Good place to show initial UI, or prepare any dialogs etc.

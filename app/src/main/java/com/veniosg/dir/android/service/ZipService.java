@@ -22,17 +22,16 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.mvvm.model.FileHolder;
-import com.veniosg.dir.android.util.FileUtils;
+import com.veniosg.dir.android.storage.CompressOperation;
 import com.veniosg.dir.android.util.Logger;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.util.Notifier;
 import com.veniosg.dir.android.util.Utils;
+import com.veniosg.dir.mvvm.model.FileHolder;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +39,10 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
+
+import static com.veniosg.dir.android.storage.CompressArguments.compressArgs;
+import static com.veniosg.dir.android.util.FileUtils.delete;
+import static java.util.Collections.singletonList;
 
 /**
  * @author George Venios
@@ -53,7 +55,7 @@ public class ZipService extends IntentService {
     private static final String EXTRA_FILES = "com.veniosg.dir.action.FILES";
 
     /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
+     * Creates an IntentService. Invoked by your subclass's constructor.
      */
     public ZipService() {
         super(ZipService.class.getName());
@@ -65,21 +67,13 @@ public class ZipService extends IntentService {
         File to = new File(intent.getData().getPath());
 
         if (ACTION_COMPRESS.equals(intent.getAction())) {
-            try {
-                compress(files, to);
-            } catch (Exception e) {
-                // Cleanup
-                to.delete();
-
-                Logger.log(e);
-                Notifier.showCompressDoneNotification(false, files.hashCode(), to, this);
-            }
+            new CompressOperation(this).invoke(compressArgs(to, files));
         } else if (ACTION_EXTRACT.equals(intent.getAction())) {
             try {
                 extract(files, to);
             } catch (Exception e) {
                 // Cleanup
-                FileUtils.delete(to);
+                delete(to);
 
                 Logger.log(e);
                 Notifier.showExtractDoneNotification(false, files.hashCode(), to, this);
@@ -122,93 +116,17 @@ public class ZipService extends IntentService {
             createDir(outputFile.getParentFile());
         }
 
-        BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
-        BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile));
-        try {
+        try (
+                BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
+                BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile))
+        ) {
             int len;
             byte buf[] = new byte[BUFFER_SIZE];
             while ((len = inputStream.read(buf)) > 0) {
                 outputStream.write(buf, 0, len);
             }
-        } finally {
-            outputStream.close();
-            inputStream.close();
         }
         outputFile.setLastModified(entry.getTime());
-    }
-
-    /**
-     * @param list The files to compress.
-     * @param to The zip file to create.
-     */
-    private void compress(List<FileHolder> list, File to) throws IOException, NullPointerException {
-        int fileCount = FileUtils.getFileCount(list);
-        int filesCompressed = 0;
-        ZipOutputStream zipStream = new ZipOutputStream(
-                new BufferedOutputStream(
-                        new FileOutputStream(to)));
-
-        for (FileHolder file : list) {
-            filesCompressed = compressCore(list.hashCode(), zipStream, file.getFile(),
-                    null, filesCompressed, fileCount, to);
-        }
-
-        zipStream.flush();
-        zipStream.close();
-
-        MediaScannerUtils.informFileAdded(getApplicationContext(), to);
-        Notifier.showCompressDoneNotification(true, list.hashCode(), to, this);
-        FileListFragment.refresh(this, to.getParentFile());
-    }
-
-    /**
-     * Recursively compress a File.
-     * @return How many files where compressed.
-     */
-    private int compressCore(int notId, ZipOutputStream zipStream, File toCompress, String internalPath,
-                             int filesCompressed, final int fileCount, File zipFile) throws IOException {
-        Notifier.showCompressProgressNotification(
-                filesCompressed, fileCount, notId, zipFile, toCompress, this);
-        if (internalPath == null)
-            internalPath = "";
-
-        if (toCompress.isFile()) {
-            byte[] buf = new byte[BUFFER_SIZE];
-            int len;
-            FileInputStream in = new FileInputStream(toCompress);
-
-            // Create internal zip file entry.
-            ZipEntry entry;
-            if (internalPath.length() > 0) {
-                entry = new ZipEntry(internalPath + "/" + toCompress.getName());
-            } else {
-                entry = new ZipEntry(toCompress.getName());
-            }
-            entry.setTime(toCompress.lastModified());
-            zipStream.putNextEntry(entry);
-
-            // Compress
-            while ((len = in.read(buf)) > 0) {
-                zipStream.write(buf, 0, len);
-            }
-
-            filesCompressed++;
-            zipStream.closeEntry();
-            in.close();
-        } else {
-            if (toCompress.list().length == 0) {
-                zipStream.putNextEntry(new ZipEntry(internalPath + "/" + toCompress.getName() + "/"));
-                zipStream.closeEntry();
-            } else {
-                for (File child : toCompress.listFiles()) {
-                    filesCompressed = compressCore(notId, zipStream, child,
-                            internalPath + "/" + toCompress.getName(),
-                            filesCompressed, fileCount, zipFile);
-                }
-            }
-        }
-
-        return filesCompressed;
     }
 
     private int countFilesInZip(List<ZipFile> zipFiles) {
@@ -221,7 +139,7 @@ public class ZipService extends IntentService {
         return count;
     }
 
-    private static void createDir(File dir) {
+    private void createDir(File dir) {
         if (dir.exists()) {
             return;
         }
@@ -240,13 +158,21 @@ public class ZipService extends IntentService {
         return zips;
     }
 
+    public static void extractTo(Context c, final FileHolder tbe, File extractTo) {
+        extractTo(c, singletonList(tbe), extractTo);
+    }
+
+    public static void compressTo(Context c, final FileHolder tbc, File compressTo) {
+        compressTo(c, singletonList(tbc), compressTo);
+    }
+
     public static void extractTo(Context c, List<FileHolder> tbe, File extractTo) {
         Intent i = new Intent(ACTION_EXTRACT);
         i.setClassName(c, ZipService.class.getName());
         i.setData(Uri.fromFile(extractTo));
         i.putParcelableArrayListExtra(EXTRA_FILES, tbe instanceof ArrayList
                 ? (ArrayList<FileHolder>) tbe
-                : new ArrayList<FileHolder>(tbe));
+                : new ArrayList<>(tbe));
         c.startService(i);
     }
 
@@ -256,23 +182,7 @@ public class ZipService extends IntentService {
         i.setData(Uri.fromFile(compressTo));
         i.putParcelableArrayListExtra(EXTRA_FILES, tbc instanceof ArrayList
                 ? (ArrayList<FileHolder>) tbc
-                : new ArrayList<FileHolder>(tbc));
-        c.startService(i);
-    }
-
-    public static void extractTo(final Context c, final FileHolder tbe, File extractTo) {
-        final Intent i = new Intent(ACTION_EXTRACT);
-        i.setClassName(c, ZipService.class.getName());
-        i.setData(Uri.fromFile(extractTo));
-        i.putParcelableArrayListExtra(EXTRA_FILES, new ArrayList<FileHolder>(){{add(tbe);}});
-        c.startService(i);
-    }
-
-    public static void compressTo(Context c, final FileHolder tbc, File compressTo) {
-        Intent i = new Intent(ACTION_COMPRESS);
-        i.setClassName(c, ZipService.class.getName());
-        i.setData(Uri.fromFile(compressTo));
-        i.putParcelableArrayListExtra(EXTRA_FILES, new ArrayList<FileHolder>(){{add(tbc);}});
+                : new ArrayList<>(tbc));
         c.startService(i);
     }
 }

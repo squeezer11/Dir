@@ -49,7 +49,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
-    protected boolean doOperation(DeleteArguments args) {
+    protected boolean operate(DeleteArguments args) {
         boolean allSucceeded = true;
 
         for (FileHolder fh : args.getVictims()) {

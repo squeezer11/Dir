@@ -231,12 +231,12 @@ public class FileManagerActivityTest {
         user.types().inputFileName(zipName);
         user.selects().ok();
 
-        // uncompress
+        // extract
         user.selects().longFileInList(zipName + ".zip");
         user.selects().operationsAction();
         user.selects().extractAction();
 
-        // assert uncompressed contents
+        // verify extracted structure
         user.selects().fileInList(zipName);
         user.selects().fileInList(testDirectory);
         user.sees().fileInList(testChildDirectory);

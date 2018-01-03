@@ -39,7 +39,7 @@ public class MoveOperation extends FileOperation<MoveArguments> {
     }
 
     @Override
-    protected boolean doOperation(MoveArguments args) {
+    protected boolean operate(MoveArguments args) {
         boolean res = true;
         int fileIndex = 0;
         boolean fileMoved;
