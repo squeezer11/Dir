@@ -174,6 +174,20 @@ public class FileManagerActivityTest {
     }
 
     @Test
+    public void deletesFileAndDirectory() throws Exception {
+        user.launches().viewWithFileScheme(testDirectory);
+
+        user.selects().longFileInList(testChildDirectory);
+        user.selects().fileInList(testChildFile);
+        user.selects().operationsAction();
+        user.selects().deleteAction();
+        user.selects().yes();
+
+        user.cannotSee().fileInList(testChildDirectory);
+        user.cannotSee().fileInList(testChildFile);
+    }
+
+    @Test
     public void renamesFile() throws Exception {
         String nameSuffix = "2";
         String updatedName = testChildFile.getName() + nameSuffix;
