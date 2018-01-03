@@ -291,12 +291,31 @@ public class FileUtils {
         return fileName.substring(0, fileName.length() - extension.length());
     }
 
-    public static void deleteDirectory(File fileOrDirectory) {
-        if (fileOrDirectory.isDirectory())
-            for (File child : fileOrDirectory.listFiles())
-                deleteDirectory(child);
+    /**
+     * Delete a file or directory along with its children.
+     *
+     * @return Whether the operation succeeded.
+     */
+    public static boolean delete(File fileOrDirectory) {
+        boolean res = true;
 
-        fileOrDirectory.delete();
+        // Delete children if directory
+        File[] children = fileOrDirectory.listFiles();
+        boolean hasChildren = children != null && children.length != 0;
+        if (hasChildren) {
+            for (File childFile : children) {
+                if (childFile.isDirectory()) {
+                    res &= delete(childFile);
+                } else {
+                    res &= childFile.delete();
+                }
+            }
+        }
+
+        // Delete file itself
+        res &= fileOrDirectory.delete();
+
+        return res;
     }
 
     public static String getFileName(File file) {

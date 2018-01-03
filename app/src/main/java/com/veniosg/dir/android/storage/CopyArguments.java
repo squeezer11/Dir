@@ -35,7 +35,7 @@ public class CopyArguments extends FileOperation.Arguments {
         this.filesToCopy = toCopy;
     }
 
-    public static CopyArguments copyArgs(List<FileHolder> toCopy, File to) {
+    public static CopyArguments copyArgs(@NonNull List<FileHolder> toCopy, @NonNull File to) {
         return new CopyArguments(toCopy, to);
     }
 

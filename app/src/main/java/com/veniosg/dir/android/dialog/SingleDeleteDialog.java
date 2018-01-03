@@ -35,6 +35,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.veniosg.dir.android.util.FileUtils.delete;
+
 public class SingleDeleteDialog extends DialogFragment {
 	private FileHolder mFileHolder;
 	
@@ -67,30 +69,6 @@ public class SingleDeleteDialog extends DialogFragment {
 		 */
 		private int mResult = 1;
 		private ProgressDialog dialog = new ProgressDialog(getActivity());
-
-		/**
-		 * Recursively delete a file or directory and all of its children.
-		 * 
-		 * @return 0 if successful, error value otherwise.
-		 */
-		private int recursiveDelete(File file) {
-			File[] files = file.listFiles();
-			if (files != null && files.length != 0) {
-                // If it's a directory delete all children.
-                for (File childFile : files) {
-                    if (childFile.isDirectory()) {
-                        mResult *= recursiveDelete(childFile);
-                    } else {
-                        mResult *= childFile.delete() ? 1 : 0;
-                    }
-                }
-            }
-				
-            // And then delete parent. -- or just delete the file.
-            mResult *= file.delete() ? 1 : 0;
-
-            return mResult;
-		}
 		
 		@Override
 		protected void onPreExecute() {		
@@ -103,19 +81,19 @@ public class SingleDeleteDialog extends DialogFragment {
 		protected Void doInBackground(File... params) {
             File tbd = params[0];
             boolean isDir = tbd.isDirectory();
-            List<String> paths = new ArrayList<String>();
+            List<String> paths = new ArrayList<>();
             if (isDir) {
                 MediaScannerUtils.getPathsOfFolder(paths, tbd);
             }
 
-			recursiveDelete(tbd);
+			delete(tbd);
 
             if (isDir) {
-                MediaScannerUtils.informPathsDeleted(getTargetFragment()
-                        .getActivity().getApplicationContext(), paths);
+                MediaScannerUtils.informPathsDeleted(
+                		getTargetFragment().getActivity().getApplicationContext(), paths);
             } else {
-                MediaScannerUtils.informFileDeleted(getTargetFragment()
-                        .getActivity().getApplicationContext(), tbd);
+                MediaScannerUtils.informFileDeleted(
+                		getTargetFragment().getActivity().getApplicationContext(), tbd);
             }
 			return null;
 		}

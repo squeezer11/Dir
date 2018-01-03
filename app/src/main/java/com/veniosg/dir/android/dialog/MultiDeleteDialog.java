@@ -29,12 +29,13 @@ import android.widget.Toast;
 import com.veniosg.dir.IntentConstants;
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.android.util.MediaScannerUtils;
+import com.veniosg.dir.mvvm.model.FileHolder;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.veniosg.dir.android.util.FileUtils.delete;
 
 public class MultiDeleteDialog extends DialogFragment {
 	private List<FileHolder> mFileHolders;
@@ -69,30 +70,6 @@ public class MultiDeleteDialog extends DialogFragment {
 		private int mResult = 1;
 		private ProgressDialog dialog = new ProgressDialog(getActivity());
 
-        /**
-		 * Recursively delete a file or directory and all of its children.
-		 * 
-		 * @return 0 if successful, error value otherwise.
-		 */
-		private int recursiveDelete(File file) {
-			File[] files = file.listFiles();
-			if (files != null && files.length != 0) {
-                // If it's a directory delete all children.
-                for (File childFile : files) {
-                    if (childFile.isDirectory()) {
-                        mResult *= recursiveDelete(childFile);
-                    } else {
-                        mResult *= childFile.delete() ? 1 : 0;
-                    }
-                }
-            }
-				
-            // And then delete parent. -- or just delete the file.
-            mResult *= file.delete() ? 1 : 0;
-
-            return mResult;
-		}
-		
 		@Override
 		protected void onPreExecute() {		
 			dialog.setMessage(getActivity().getString(R.string.deleting));
@@ -111,7 +88,7 @@ public class MultiDeleteDialog extends DialogFragment {
                     MediaScannerUtils.getPathsOfFolder(paths, fh.getFile());
                 }
 
-                recursiveDelete(fh.getFile());
+                delete(fh.getFile());
 
                 if (context != null) {
                     if (isDir) {

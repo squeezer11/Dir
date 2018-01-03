@@ -79,7 +79,7 @@ public class ZipService extends IntentService {
                 extract(files, to);
             } catch (Exception e) {
                 // Cleanup
-                FileUtils.deleteDirectory(to);
+                FileUtils.delete(to);
 
                 Logger.log(e);
                 Notifier.showExtractDoneNotification(false, files.hashCode(), to, this);
