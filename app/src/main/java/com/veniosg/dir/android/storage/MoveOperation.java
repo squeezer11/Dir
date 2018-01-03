@@ -31,7 +31,7 @@ import static com.veniosg.dir.android.util.Notifier.showMoveDoneNotification;
 import static com.veniosg.dir.android.util.Notifier.showMoveProgressNotification;
 
 public class MoveOperation extends FileOperation<MoveArguments> {
-    private Context context;
+    private final Context context;
 
     public MoveOperation(Context context) {
         super(new StorageAccessHelperCompat(context));
@@ -78,6 +78,10 @@ public class MoveOperation extends FileOperation<MoveArguments> {
         }
 
         return res;
+    }
+
+    @Override
+    protected void onStartOperation(MoveArguments args) {
     }
 
     @Override

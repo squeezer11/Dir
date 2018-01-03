@@ -36,7 +36,7 @@ import static com.veniosg.dir.android.util.Notifier.showCopyProgressNotification
 public class CopyOperation extends FileOperation<CopyArguments> {
     private static final int COPY_BUFFER_SIZE = 32 * 1024;
 
-    private Context context;
+    private final Context context;
 
     public CopyOperation(Context context) {
         super(new StorageAccessHelperCompat(context));
@@ -64,6 +64,10 @@ public class CopyOperation extends FileOperation<CopyArguments> {
         }
 
         return filesCopied == fileCount;
+    }
+
+    @Override
+    protected void onStartOperation(CopyArguments args) {
     }
 
     @Override

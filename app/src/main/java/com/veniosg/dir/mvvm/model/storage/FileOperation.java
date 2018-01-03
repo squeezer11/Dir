@@ -37,6 +37,7 @@ public abstract class FileOperation<A extends FileOperation.Arguments> {
     }
 
     public final void invoke(A args) {
+        onStartOperation(args);
         boolean normalSucceeded = doOperation(args);
         boolean failedBecauseOfNoAccess = !normalSucceeded &&
                 needsWriteAccess() &&
@@ -74,9 +75,18 @@ public abstract class FileOperation<A extends FileOperation.Arguments> {
     protected abstract boolean doOperation(A args);
 
     /**
+     * Good place to show initial UI, or prepare any dialogs etc.
+     * Called right before running the operation. Can be called multiple times.
+     *
+     * @param args Original arguments for the invocation that is getting started.
+     */
+    protected abstract void onStartOperation(A args);
+
+    /**
      * Good place to show final result (success/failure) UI.
      * No other callbacks will happen after this.
-     *  @param success Whether the invocation was successful.
+     *
+     * @param success Whether the invocation was successful.
      * @param args    Original arguments for the invocation that just finished.
      */
     protected abstract void onResult(boolean success, A args);

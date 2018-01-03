@@ -16,80 +16,34 @@
 
 package com.veniosg.dir.android.dialog;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-import com.veniosg.dir.R;
-import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.util.MediaScannerUtils;
+import com.veniosg.dir.android.storage.DeleteOperation;
 import com.veniosg.dir.mvvm.model.FileHolder;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import static com.veniosg.dir.android.storage.DeleteArguments.deleteArgs;
 
-import static android.widget.Toast.LENGTH_LONG;
-import static android.widget.Toast.makeText;
-import static com.veniosg.dir.android.util.FileUtils.delete;
-
-class DeleteAsyncTask extends AsyncTask<FileHolder, Void, DeleteAsyncTask.Result> {
+class DeleteAsyncTask extends AsyncTask<FileHolder, Void, Void> {
     private final Context context;
-    private final ProgressDialog dialog;
 
     DeleteAsyncTask(@NonNull Context context) {
         this.context = context;
-        dialog = new ProgressDialog(context);
     }
 
     @Override
     protected void onPreExecute() {
-        dialog.setMessage(context.getString(R.string.deleting));
-        dialog.setIndeterminate(true);
-        dialog.show();
     }
 
     @Override
-    protected Result doInBackground(FileHolder... params) {
-        boolean allSucceeded = true;
-
-        for (FileHolder fh : params) {
-            File tbd = fh.getFile();
-            boolean isDir = tbd.isDirectory();
-            List<String> paths = new ArrayList<>();
-
-            if (isDir) {
-                MediaScannerUtils.getPathsOfFolder(paths, tbd);
-            }
-
-            allSucceeded &= delete(tbd);
-
-            if (isDir) {
-                MediaScannerUtils.informPathsDeleted(context, paths);
-            } else {
-                MediaScannerUtils.informFileDeleted(context, tbd);
-            }
-        }
-        return new Result(allSucceeded, params[0].getFile().getParentFile());
+    protected Void doInBackground(FileHolder... params) {
+        new DeleteOperation(context)
+                .invoke(deleteArgs(params[0].getFile().getParentFile(), params));
+        return null;
     }
 
     @Override
-    protected void onPostExecute(Result result) {
-        makeText(dialog.getContext(), result.success ?
-                R.string.delete_success : R.string.delete_failure, LENGTH_LONG)
-                .show();
-        FileListFragment.refresh(context, result.parent);
-        dialog.dismiss();
-    }
-
-    static class Result {
-        private final boolean success;
-        private final File parent;
-
-        private Result(boolean success, File parent) {
-            this.success = success;
-            this.parent = parent;
-        }
+    protected void onPostExecute(Void ignored) {
     }
 }
