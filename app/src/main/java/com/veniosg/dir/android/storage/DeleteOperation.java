@@ -106,7 +106,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
 
     @Override
     protected boolean needsWriteAccess() {
-        return false;
+        return true;
     }
 
     private void runOnUi(Runnable runnable) {
