@@ -17,6 +17,7 @@
 package com.veniosg.dir.android.storage;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.FileHolder;
@@ -27,8 +28,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.List;
 
-import static com.veniosg.dir.android.util.FileUtils.createUniqueCopyName;
 import static com.veniosg.dir.android.util.FileUtils.countFilesUnder;
+import static com.veniosg.dir.android.util.FileUtils.createUniqueCopyName;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
 import static com.veniosg.dir.android.util.Notifier.showCopyDoneNotification;
 import static com.veniosg.dir.android.util.Notifier.showCopyProgressNotification;
@@ -46,15 +47,16 @@ public class CopyOperation extends FileOperation<CopyArguments> {
     @Override
     protected boolean operate(CopyArguments args) {
         List<FileHolder> files = args.getFilesToCopy();
-        File to = args.getTarget();
+        File destDirectory = args.getTarget();
 
         int fileCount = countFilesUnder(files);
         int filesCopied = 0;
 
-        // Try copying
         for (FileHolder origin : files) {
-            File dest = createUniqueCopyName(context, to, origin.getName());
-            filesCopied = copyCore(filesCopied, fileCount, origin.getFile(), dest, files.hashCode());
+            File dest = createUniqueCopyName(context, destDirectory, origin.getName());
+            if (dest != null) {
+                filesCopied = copyCore(filesCopied, fileCount, origin.getFile(), dest, files.hashCode());
+            }
 
             if (origin.getFile().isDirectory()) {
                 MediaScannerUtils.informFolderAdded(context, dest);
@@ -136,9 +138,8 @@ public class CopyOperation extends FileOperation<CopyArguments> {
      * @param notId       The id for the progress notification.
      * @return The new filesCopied count.
      */
-    private int copyCore(int filesCopied, int fileCount, File oldFile, File newFile, int notId) {
+    private int copyCore(int filesCopied, int fileCount, @NonNull File oldFile, @NonNull File newFile, int notId) {
         if (oldFile.isDirectory()) {
-            // Create directory if it doesn't exist
             if (!newFile.exists()) newFile.mkdir();
 
             // list all the directory contents

@@ -55,19 +55,18 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
         for (FileHolder fh : args.getVictims()) {
             File tbd = fh.getFile();
             boolean isDir = tbd.isDirectory();
-            List<String> paths = new ArrayList<>();
 
+            List<String> paths = new ArrayList<>();
             if (isDir) {
                 MediaScannerUtils.getPathsOfFolder(paths, tbd);
-            }
-
-            allSucceeded &= delete(tbd);
-
-            if (isDir) {
-                MediaScannerUtils.informPathsDeleted(context, paths);
             } else {
-                MediaScannerUtils.informFileDeleted(context, tbd);
+                paths.add(tbd.getAbsolutePath());
             }
+
+            boolean deleted = delete(tbd);
+            allSucceeded &= deleted;
+
+            if (deleted) MediaScannerUtils.informPathsDeleted(context, paths);
         }
         return allSucceeded;
     }

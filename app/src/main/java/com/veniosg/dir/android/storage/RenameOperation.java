@@ -28,9 +28,11 @@ import java.util.List;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
+import static com.veniosg.dir.android.util.MediaScannerUtils.getPathsOfFolder;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
     private Context context;
+    private List<String> affectedPaths = new ArrayList<>();
 
     public RenameOperation(Context context) {
         super(new StorageAccessHelperCompat(context));
@@ -42,20 +44,9 @@ public class RenameOperation extends FileOperation<RenameArguments> {
         File from = args.getFileToRename();
         File dest = args.getTarget();
 
-        List<String> paths = new ArrayList<>();
-        if (from.isDirectory()) MediaScannerUtils.getPathsOfFolder(paths, from);
-
         if (!dest.exists()) {
             boolean renamed = from.renameTo(dest);
             if (!renamed) return false;
-
-            if (dest.isFile()) {
-                MediaScannerUtils.informFileDeleted(context, from);
-                MediaScannerUtils.informFileAdded(context, dest);
-            } else {
-                MediaScannerUtils.informPathsDeleted(context, paths);
-                MediaScannerUtils.informFolderAdded(context, dest);
-            }
         }
 
         return true;
@@ -63,6 +54,12 @@ public class RenameOperation extends FileOperation<RenameArguments> {
 
     @Override
     protected void onStartOperation(RenameArguments args) {
+        File from = args.getFileToRename();
+        if (from.isDirectory()) {
+            getPathsOfFolder(affectedPaths, from);
+        } else {
+            affectedPaths.add(from.getAbsolutePath());
+        }
     }
 
     @Override
@@ -72,6 +69,17 @@ public class RenameOperation extends FileOperation<RenameArguments> {
                 success ? R.string.rename_success : R.string.rename_failure,
                 LENGTH_SHORT
         ).show();
+
+        if (success) {
+            File from = args.getFileToRename();
+            File dest = args.getTarget();
+            MediaScannerUtils.informPathsDeleted(context, affectedPaths);
+            if (dest.isFile()) {
+                MediaScannerUtils.informFileAdded(context, dest);
+            } else {
+                MediaScannerUtils.informFolderAdded(context, dest);
+            }
+        }
     }
 
     @Override

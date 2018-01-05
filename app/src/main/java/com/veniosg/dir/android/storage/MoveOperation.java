@@ -40,9 +40,8 @@ public class MoveOperation extends FileOperation<MoveArguments> {
 
     @Override
     protected boolean operate(MoveArguments args) {
-        boolean res = true;
+        boolean allSucceeded = true;
         int fileIndex = 0;
-        boolean fileMoved;
 
         File from;
         File toFile;
@@ -58,26 +57,25 @@ public class MoveOperation extends FileOperation<MoveArguments> {
             List<String> paths = new ArrayList<>();
             if (from.isDirectory()) {
                 MediaScannerUtils.getPathsOfFolder(paths, from);
+            } else {
+                paths.add(from.getAbsolutePath());
             }
 
-            // Move
-            fileMoved = fh.getFile().renameTo(toFile);
+            boolean fileMoved = fh.getFile().renameTo(toFile);
 
-            // Inform media scanner
             if (fileMoved) {
+                MediaScannerUtils.informPathsDeleted(context, paths);
                 if (toFile.isDirectory()) {
-                    MediaScannerUtils.informPathsDeleted(context, paths);
                     MediaScannerUtils.informFolderAdded(context, toFile);
                 } else {
-                    MediaScannerUtils.informFileDeleted(context, from);
                     MediaScannerUtils.informFileAdded(context, toFile);
                 }
             }
 
-            res &= fileMoved;
+            allSucceeded &= fileMoved;
         }
 
-        return res;
+        return allSucceeded;
     }
 
     @Override
