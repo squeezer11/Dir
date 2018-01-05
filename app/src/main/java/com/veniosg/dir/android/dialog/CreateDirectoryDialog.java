@@ -27,10 +27,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.veniosg.dir.R;
-import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.storage.CreateDirectoryOperation;
 
 import java.io.File;
@@ -56,7 +54,7 @@ public class CreateDirectoryDialog extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         LinearLayout view = (LinearLayout) inflater.inflate(R.layout.dialog_text_input, null);
-        final EditText v = view.findViewById(R.id.foldername);
+        final EditText v = view.findViewById(R.id.textinput);
         v.setHint(R.string.folder_name);
 
         v.setOnEditorActionListener((text, actionId, event) -> {
