@@ -277,8 +277,6 @@ public class FileManagerActivityTest {
 
     }
 
-    // TODO test other features (pt2)
-
     private void userCopiesFileInList(File file) {
         user.selects().longFileInList(file);
         user.selects().operationsAction();
