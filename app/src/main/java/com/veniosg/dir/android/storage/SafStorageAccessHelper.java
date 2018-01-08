@@ -23,6 +23,7 @@ import android.content.IntentFilter;
 import android.content.UriPermission;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.provider.DocumentFile;
 
@@ -38,7 +39,6 @@ import static android.support.v4.provider.DocumentFile.fromTreeUri;
 import static com.veniosg.dir.IntentConstants.ACTION_STORAGE_ACCESS_RESULT;
 import static com.veniosg.dir.IntentConstants.EXTRA_STORAGE_ACCESS_GRANTED;
 import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
-import static com.veniosg.dir.android.util.FileUtils.isOnExternalStorage;
 import static com.veniosg.dir.android.util.FileUtils.isWritable;
 import static com.veniosg.dir.android.util.Logger.log;
 import static java.lang.String.format;
@@ -100,7 +100,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         }
 
         for (UriPermission permission : permissions) {
-            // TODO SDCARD is the URI really formatted like that?
+            // TODO SDCARD URI is not formatted this way -- content://com.android.externalstorage.documents/tree/6338-3934%3A
             boolean grantedOnAncestor = canonicalPath.startsWith(permission.getUri().getPath());
             if (permission.isWritePermission() && grantedOnAncestor) return true;
         }
@@ -111,7 +111,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         File fileParent = fileInStorage.getParentFile();
         // Reached root, can't write
         if (fileParent == null) return false;
-        // Recurse until we find a parent that exists
+        // Recur until we find a parent that exists
         if (!fileParent.exists()) return checkWriteAccess(fileParent);
 
         File tmpFile = generateDummyFileIn(fileParent);
@@ -119,9 +119,10 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         boolean writable = false;
         if (isWritable(tmpFile)) writable = true;
 
+        DocumentFile document = null;
         if (!writable) {
             // Java said not writable, confirm with SAF
-            DocumentFile document = getOrCreateDocumentFile(tmpFile, context);
+            document = getOrCreateDocumentFile(tmpFile, context);
 
             if (document != null) {
                 // This should have created the file - otherwise something is wrong with access URL.
@@ -130,7 +131,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         }
 
         // Cleanup
-        safAwareDelete(tmpFile, context);
+        safAwareDelete(tmpFile, context, document);
         return writable;
     }
 
@@ -149,15 +150,15 @@ class SafStorageAccessHelper implements StorageAccessHelper {
      * Delete a file. May be even on external SD card.
      *
      * @param file the file to be deleted.
+     * @param safFile Document to use if normal deletion fails.
      * @return True if successfully deleted.
      */
     @SuppressWarnings("UnusedReturnValue")
-    private boolean safAwareDelete(@NonNull final File file, Context context) {
+    private boolean safAwareDelete(@NonNull final File file, Context context, @Nullable DocumentFile safFile) {
         boolean deleteSucceeded = file.delete();
 
-        if (!deleteSucceeded && isOnExternalStorage(file, context)) {
-            DocumentFile safFile = getOrCreateDocumentFile(file, context);
-            deleteSucceeded = safFile != null && safFile.delete();
+        if (!deleteSucceeded && safFile != null) {
+            deleteSucceeded = safFile.delete();
         }
 
         return deleteSucceeded && !file.exists();
@@ -193,7 +194,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
 //        if (uriString == null) return null;
 //        Uri docTreeUri = parse(uriString);
         // TODO SDCARD Verify this is what the SAF uri looks like
-        Uri docTreeUri = new Uri.Builder().scheme("content").path(file.getAbsolutePath()).build();
+        Uri docTreeUri = Uri.parse("content://com.android.externalstorage.documents/tree/6338-3934%3A/WriteAccessCheck0");
 
         // Find the file we need down the granted storage tree.
         DocumentFile docFile = fromTreeUri(context, docTreeUri);
