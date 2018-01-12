@@ -20,9 +20,12 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
+import com.veniosg.dir.android.util.DocumentFileUtils;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
@@ -33,6 +36,7 @@ import java.util.List;
 
 import static android.widget.Toast.LENGTH_LONG;
 import static android.widget.Toast.makeText;
+import static com.veniosg.dir.android.util.DocumentFileUtils.findFile;
 import static com.veniosg.dir.android.util.FileUtils.delete;
 
 public class DeleteOperation extends FileOperation<DeleteArguments> {
@@ -54,14 +58,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
 
         for (FileHolder fh : args.getVictims()) {
             File tbd = fh.getFile();
-            boolean isDir = tbd.isDirectory();
-
-            List<String> paths = new ArrayList<>();
-            if (isDir) {
-                MediaScannerUtils.getPathsOfFolder(paths, tbd);
-            } else {
-                paths.add(tbd.getAbsolutePath());
-            }
+            List<String> paths = getPathsUnder(tbd);
 
             boolean deleted = delete(tbd);
             allSucceeded &= deleted;
@@ -73,8 +70,18 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
 
     @Override
     protected boolean operateSaf(DeleteArguments args) {
-        // TODO SDCARD
-        return false;
+        boolean allSucceeded = true;
+
+        for (FileHolder fh : args.getVictims()) {
+            DocumentFile tbd = findFile(context, fh.getFile());
+            List<String> paths = getPathsUnder(fh.getFile());
+
+            boolean deleted = tbd != null && tbd.delete();
+            allSucceeded &= deleted;
+
+            if (deleted) MediaScannerUtils.informPathsDeleted(context, paths);
+        }
+        return allSucceeded;
     }
 
     @Override
@@ -120,5 +127,16 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
         } else {
             runnable.run();
         }
+    }
+
+    @NonNull
+    private List<String> getPathsUnder(File file) {
+        List<String> paths = new ArrayList<>();
+        if (file.isDirectory()) {
+            MediaScannerUtils.getPathsOfFolder(paths, file);
+        } else {
+            paths.add(file.getAbsolutePath());
+        }
+        return paths;
     }
 }

@@ -2,6 +2,7 @@ package com.veniosg.dir.android.util;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.provider.DocumentFile;
 
@@ -13,23 +14,49 @@ import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
 import static com.veniosg.dir.android.util.Logger.log;
 
 public abstract class DocumentFileUtils {
-    public static DocumentFile getOrCreateTreeDocumentFile(final File file, Context context) {
+    @Nullable
+    public static DocumentFile findFile(Context context, final File file) {
         if (!file.exists()) {
-            throw new RuntimeException("File must exist. Call 3-args version.");
+            throw new IllegalArgumentException(
+                    "File must exist. Use createFile() or createDirectory() instead.");
         } else {
-            return getOrCreateTreeDocumentFile(file, context, file.isDirectory());
+            return seekOrCreateTreeDocumentFile(context, file, null, false);
+        }
+    }
+
+    @Nullable
+    public static DocumentFile createFile(Context context, final File file, String mimeType) {
+        if (file.exists()) {
+            throw new IllegalArgumentException(
+                    "File must not exist. Use findFile() instead.");
+        } else {
+            return seekOrCreateTreeDocumentFile(context, file, mimeType, true);
+        }
+    }
+
+    @Nullable
+    public static DocumentFile createDirectory(Context context, final File directory) {
+        if (directory.exists()) {
+            throw new IllegalArgumentException("Directory must not exist. Use findFile() instead.");
+        } else {
+            return seekOrCreateTreeDocumentFile(context, directory, null, true);
         }
     }
 
     /**
      * Get a DocumentFile corresponding to the given file. If the file doesn't exist, it is created.
      *
-     * @param file        The file to get the DocumentFile representation of.
-     * @param isDirectory Whether file represents a file or directory.
-     * @return The DocumentFile representing the passed file. Null if the file or its path can't be created.
+     * @param file     The file to get the DocumentFile representation of.
+     * @param mimeType Only applies if shouldCreate is true. The mimeType of the file to create.
+     *                 Null creates directory.
+     * @return The DocumentFile representing the passed file. Null if the file or its path can't
+     * be created, or found - depending on shouldCreate's value.
      */
     @Nullable
-    public static DocumentFile getOrCreateTreeDocumentFile(final File file, Context context, boolean isDirectory) {
+    private static DocumentFile seekOrCreateTreeDocumentFile(@NonNull Context context,
+                                                             @NonNull final File file,
+                                                             @Nullable String mimeType,
+                                                             boolean shouldCreate) {
         String storageRoot = getExternalStorageRoot(file, context);
         if (storageRoot == null) return null;   // File is not on external storage
 
@@ -56,27 +83,25 @@ public abstract class DocumentFileUtils {
         String storageRootUri = "content://com.android.externalstorage.documents/tree/6338-3934%3A";
         Uri docTreeUri = Uri.parse(storageRootUri);
 
-        // Find the file we need down the granted storage tree.
+        // Walk the granted storage tree
         DocumentFile docFile = fromTreeUri(context, docTreeUri);
         if (fileIsStorageRoot) return docFile;
 
         String[] filePathSegments = filePathRelativeToRoot.split("/");
         for (int i = 0; i < filePathSegments.length; i++) {
-
             String segment = filePathSegments[i];
             boolean isLastSegment = i == filePathSegments.length - 1;
             DocumentFile nextDocFile = docFile.findFile(segment);
 
-            if (nextDocFile == null) {
-                if (isLastSegment && !isDirectory) {
-                    nextDocFile = docFile.createFile("image/png", segment);
-                } else {
-                    nextDocFile = docFile.createDirectory(segment);
-                }
+            if (nextDocFile == null && shouldCreate) {
+                boolean shouldCreateFile = isLastSegment && mimeType != null;
+                nextDocFile = shouldCreateFile ? docFile.createFile(mimeType, segment)
+                        : docFile.createDirectory(segment);
             }
 
             if (nextDocFile == null) {
-                // Segment of file's path not writable
+                // If shouldCreate = true, it means that current segment is not writable
+                // Otherwise we couldn't find the file we were looking for
                 return null;
             } else {
                 docFile = nextDocFile;
@@ -85,4 +110,5 @@ public abstract class DocumentFileUtils {
 
         return docFile;
     }
+
 }

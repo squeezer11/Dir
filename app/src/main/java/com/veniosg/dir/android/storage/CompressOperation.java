@@ -17,6 +17,9 @@
 package com.veniosg.dir.android.storage;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.util.MediaScannerUtils;
@@ -30,10 +33,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.veniosg.dir.android.util.DocumentFileUtils.createFile;
 import static com.veniosg.dir.android.util.FileUtils.countFilesUnder;
 import static com.veniosg.dir.android.util.FileUtils.delete;
 import static com.veniosg.dir.android.util.Logger.log;
@@ -52,34 +57,17 @@ public class CompressOperation extends FileOperation<CompressArguments> {
 
     @Override
     protected boolean operate(CompressArguments args) {
-        List<FileHolder> toCompress = args.getToCompress();
         File to = args.getTarget();
-        int fileCount = countFilesUnder(toCompress);
-        int filesCompressed = 0;
-        BufferedOutputStream outStream;
-        try {
-            outStream = new BufferedOutputStream(new FileOutputStream(to));
-        } catch (FileNotFoundException e) {
-            log(e);
-            return false;
-        }
-        try (ZipOutputStream zipStream = new ZipOutputStream(new BufferedOutputStream(outStream))) {
-            for (FileHolder file : toCompress) {
-                filesCompressed = compressCore(getId(), zipStream, file.getFile(),
-                        null, filesCompressed, fileCount, to);
-            }
-        } catch (IOException e) {
-            log(e);
-            return false;
-        }
-
-        return true;
+        BufferedOutputStream outStream = outputStreamFor(to);
+        return outStream != null && compressTo(outStream, args.getToCompress(), to);
     }
 
     @Override
     protected boolean operateSaf(CompressArguments args) {
-        // TODO SDCARD
-        return false;
+        File to = args.getTarget();
+        DocumentFile toSaf = createFile(context, to, "application/zip");
+        BufferedOutputStream outStream = outputStreamFor(toSaf);
+        return outStream != null && compressTo(outStream, args.getToCompress(), to);
     }
 
     @Override
@@ -108,6 +96,48 @@ public class CompressOperation extends FileOperation<CompressArguments> {
 
     @Override
     protected boolean needsWriteAccess() {
+        return true;
+    }
+
+    @Nullable
+    private BufferedOutputStream outputStreamFor(DocumentFile toSaf) {
+        String msg = "Could not open output stream for zip file";
+        try {
+            throwIfNull(toSaf, msg);
+
+            OutputStream out = context.getContentResolver().openOutputStream(toSaf.getUri());
+            throwIfNull(out, msg);
+
+            return new BufferedOutputStream(out);
+        } catch (NullPointerException | FileNotFoundException e) {
+            log(e);
+            return null;
+        }
+    }
+
+    @Nullable
+    private BufferedOutputStream outputStreamFor(File to) {
+        try {
+            return new BufferedOutputStream(new FileOutputStream(to));
+        } catch (FileNotFoundException e) {
+            log(e);
+            return null;
+        }
+    }
+
+    private boolean compressTo(BufferedOutputStream outStream, List<FileHolder> toBeCompressed,
+                               File targetArchive) {
+        int filesCompressed = 0;
+        int fileCount = countFilesUnder(toBeCompressed);
+        try (ZipOutputStream zipStream = new ZipOutputStream(new BufferedOutputStream(outStream))) {
+            for (FileHolder file : toBeCompressed) {
+                filesCompressed = compressCore(getId(), zipStream, file.getFile(),
+                        null, filesCompressed, fileCount, targetArchive);
+            }
+        } catch (IOException e) {
+            log(e);
+            return false;
+        }
         return true;
     }
 
@@ -158,5 +188,9 @@ public class CompressOperation extends FileOperation<CompressArguments> {
         }
 
         return filesCompressed;
+    }
+
+    private void throwIfNull(@Nullable Object o, @NonNull String msg) {
+        if (o == null) throw new NullPointerException(msg);
     }
 }

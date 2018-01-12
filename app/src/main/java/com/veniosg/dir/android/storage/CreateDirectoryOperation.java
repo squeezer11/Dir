@@ -26,7 +26,7 @@ import java.io.File;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-import static com.veniosg.dir.android.util.DocumentFileUtils.getOrCreateTreeDocumentFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.createDirectory;
 
 public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArguments> {
     private Context context;
@@ -47,7 +47,7 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
     protected boolean operateSaf(CreateDirectoryArguments args) {
         File dest = args.getTarget();
 
-        return dest.exists() || getOrCreateTreeDocumentFile(dest, context, true) != null;
+        return dest.exists() || createDirectory(context, dest) != null;
     }
 
     @Override

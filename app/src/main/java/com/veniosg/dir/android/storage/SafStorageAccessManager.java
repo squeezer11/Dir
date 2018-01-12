@@ -36,7 +36,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.support.v4.provider.DocumentFile.fromTreeUri;
 import static com.veniosg.dir.IntentConstants.ACTION_STORAGE_ACCESS_RESULT;
 import static com.veniosg.dir.IntentConstants.EXTRA_STORAGE_ACCESS_GRANTED;
-import static com.veniosg.dir.android.util.DocumentFileUtils.getOrCreateTreeDocumentFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.createFile;
 import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
 import static com.veniosg.dir.android.util.FileUtils.isWritable;
 import static java.lang.String.format;
@@ -119,10 +119,9 @@ class SafStorageAccessManager implements StorageAccessManager {
         DocumentFile document = null;
         if (!writable) {
             // Java said not writable, confirm with SAF
-            document = getOrCreateTreeDocumentFile(tmpFile, context, false);
+            document = createFile(context, tmpFile, "image/png");
 
             if (document != null) {
-                // This should have created the file - otherwise something is wrong with access URL.
                 writable = document.canWrite() && tmpFile.exists();
             }
         }

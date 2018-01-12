@@ -21,6 +21,7 @@ import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
+import com.veniosg.dir.android.util.DocumentFileUtils;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
 
@@ -30,7 +31,7 @@ import java.util.List;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-import static com.veniosg.dir.android.util.DocumentFileUtils.getOrCreateTreeDocumentFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.findFile;
 import static com.veniosg.dir.android.util.MediaScannerUtils.getPathsOfFolder;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
@@ -58,7 +59,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
         if (dest.exists()) {
             return true;
         } else {
-            DocumentFile safFrom = getOrCreateTreeDocumentFile(from, context);
+            DocumentFile safFrom = findFile(context, from);
             return safFrom != null && safFrom.renameTo(args.getTarget().getName());
         }
     }
