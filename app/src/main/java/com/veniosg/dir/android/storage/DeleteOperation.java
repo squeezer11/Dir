@@ -72,6 +72,12 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
+    protected boolean operateSaf(DeleteArguments args) {
+        // TODO SDCARD
+        return false;
+    }
+
+    @Override
     protected void onStartOperation(DeleteArguments args) {
         runOnUi(() -> {
             dialog.setCanceledOnTouchOutside(false);

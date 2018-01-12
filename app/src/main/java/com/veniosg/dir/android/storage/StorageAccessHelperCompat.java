@@ -39,4 +39,9 @@ public class StorageAccessHelperCompat implements StorageAccessHelper {
     public void requestWriteAccess(@NonNull File fileInStorage, @NonNull AccessPermissionListener listener) {
         delegate.requestWriteAccess(fileInStorage, listener);
     }
+
+    @Override
+    public boolean isSafBased() {
+        return delegate.isSafBased();
+    }
 }

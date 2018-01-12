@@ -77,6 +77,12 @@ public class CompressOperation extends FileOperation<CompressArguments> {
     }
 
     @Override
+    protected boolean operateSaf(CompressArguments args) {
+        // TODO SDCARD
+        return false;
+    }
+
+    @Override
     protected void onStartOperation(CompressArguments args) {
     }
 

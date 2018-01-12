@@ -84,6 +84,12 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
     }
 
     @Override
+    protected boolean operateSaf(ExtractArguments args) {
+        // TODO SDCARD
+        return false;
+    }
+
+    @Override
     protected void onStartOperation(ExtractArguments args) {
     }
 

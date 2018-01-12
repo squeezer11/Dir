@@ -381,7 +381,7 @@ public class FileUtils {
         String filePath;
         try {
             filePath = file.getCanonicalPath();
-        } catch (IOException e) {
+        } catch (IOException | SecurityException e) {
             return null;
         }
 

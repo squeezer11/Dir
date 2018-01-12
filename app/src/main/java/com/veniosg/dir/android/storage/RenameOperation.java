@@ -17,8 +17,10 @@
 package com.veniosg.dir.android.storage;
 
 import android.content.Context;
+import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.R;
+import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
 
@@ -28,6 +30,7 @@ import java.util.List;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
+import static com.veniosg.dir.android.storage.SafStorageAccessHelper.getOrCreateDocumentFile;
 import static com.veniosg.dir.android.util.MediaScannerUtils.getPathsOfFolder;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
@@ -44,12 +47,20 @@ public class RenameOperation extends FileOperation<RenameArguments> {
         File from = args.getFileToRename();
         File dest = args.getTarget();
 
-        if (!dest.exists()) {
-            boolean renamed = from.renameTo(dest);
-            if (!renamed) return false;
-        }
+        return dest.exists() || from.renameTo(dest);
+    }
 
-        return true;
+    @Override
+    protected boolean operateSaf(RenameArguments args) {
+        File from = args.getFileToRename();
+        File dest = args.getTarget();
+
+        if (dest.exists()) {
+            return true;
+        } else {
+            DocumentFile documentFile = getOrCreateDocumentFile(from, context);
+            return documentFile != null && documentFile.renameTo(args.getTarget().getName());
+        }
     }
 
     @Override
@@ -71,8 +82,9 @@ public class RenameOperation extends FileOperation<RenameArguments> {
         ).show();
 
         if (success) {
-            File from = args.getFileToRename();
             File dest = args.getTarget();
+
+            FileListFragment.refresh(context, dest.getParentFile());
             MediaScannerUtils.informPathsDeleted(context, affectedPaths);
             if (dest.isFile()) {
                 MediaScannerUtils.informFileAdded(context, dest);

@@ -23,6 +23,7 @@ import java.io.File;
 public interface StorageAccessHelper {
     boolean hasWriteAccess(@NonNull File fileInStorage);
     void requestWriteAccess(@NonNull File fileInStorage, @NonNull AccessPermissionListener listener);
+    boolean isSafBased();
 
     interface AccessPermissionListener {
         void granted();

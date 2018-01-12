@@ -89,19 +89,18 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         context.startActivity(safPromptIntent);
     }
 
+    @Override
+    public boolean isSafBased() {
+        return true;
+    }
+
     private boolean permissionGrantedForParentOf(@NonNull File fileInStorage) {
         List<UriPermission> permissions = context.getContentResolver().getPersistedUriPermissions();
-        String canonicalPath = null;
-        try {
-            canonicalPath = fileInStorage.getCanonicalPath();
-        } catch (IOException | SecurityException e) {
-            log("Could not get canonical path to match against granted uri permissions");
-            return false;
-        }
 
         for (UriPermission permission : permissions) {
-            // TODO SDCARD URI is not formatted this way -- content://com.android.externalstorage.documents/tree/6338-3934%3A
-            boolean grantedOnAncestor = canonicalPath.startsWith(permission.getUri().getPath());
+            String storageRoot = getExternalStorageRoot(fileInStorage, context);
+            DocumentFile grantedDocFile = fromTreeUri(context, permission.getUri());
+            boolean grantedOnAncestor = areSameFile(storageRoot, grantedDocFile);
             if (permission.isWritePermission() && grantedOnAncestor) return true;
         }
         return false;
@@ -149,7 +148,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
     /**
      * Delete a file. May be even on external SD card.
      *
-     * @param file the file to be deleted.
+     * @param file    the file to be deleted.
      * @param safFile Document to use if normal deletion fails.
      * @return True if successfully deleted.
      */
@@ -164,13 +163,21 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         return deleteSucceeded && !file.exists();
     }
 
+    private boolean areSameFile(@Nullable String filePath, DocumentFile documentFile) {
+        if (filePath == null) return false;
+        File file = new File(filePath);
+        return file.lastModified() == documentFile.lastModified()
+                && file.getName().equals(documentFile.getName());
+    }
+
     /**
      * Get a DocumentFile corresponding to the given file. If the file doesn't exist, it is created.
      *
      * @param file The file to get the DocumentFile representation of.
-     * @return The DocumentFile representing the passed file.
+     * @return The DocumentFile representing the passed file. Null if the file or its path can't be created.
      */
-    private DocumentFile getOrCreateDocumentFile(final File file, Context context) {
+    @Nullable
+    public static DocumentFile getOrCreateDocumentFile(final File file, Context context) {
         String storageRoot = getExternalStorageRoot(file, context);
         if (storageRoot == null) return null;   // File is not on external storage
 
@@ -190,11 +197,15 @@ class SafStorageAccessHelper implements StorageAccessHelper {
             fileIsStorageRoot = true;
         }
 
+        // TODO SDCARD it looks like we need to persist (or otherwise get all permitted roots here) and walk their subtrees....
+        // TODO SDCARD we should try to make sure that the uris we're persisting ARE storage roots, otherwise we should just drop them
+
+
 //        String uriString = PreferenceManager.getDefaultSharedPreferences(context).getString("URI", null);
 //        if (uriString == null) return null;
 //        Uri docTreeUri = parse(uriString);
-        // TODO SDCARD Verify this is what the SAF uri looks like
-        Uri docTreeUri = Uri.parse("content://com.android.externalstorage.documents/tree/6338-3934%3A/WriteAccessCheck0");
+        // TODO SDCARD this should be reading off a list of uris we have access to
+        Uri docTreeUri = Uri.parse("content://com.android.externalstorage.documents/tree/6338-3934%3A");
 
         // Find the file we need down the granted storage tree.
         DocumentFile docFile = fromTreeUri(context, docTreeUri);
@@ -202,18 +213,25 @@ class SafStorageAccessHelper implements StorageAccessHelper {
 
         String[] segments = pathRelativeToRoot.split("/");
         for (int i = 0; i < segments.length; i++) {
+
             String segment = segments[i];
             boolean isLastSegment = i == segments.length - 1;
             DocumentFile nextDocFile = docFile.findFile(segment);
 
             if (nextDocFile == null) {
                 if (isLastSegment) {
-                    nextDocFile = docFile.createFile("image/jpg", segment);
+                    nextDocFile = docFile.createFile("image/png", segment);
                 } else {
                     nextDocFile = docFile.createDirectory(segment);
                 }
             }
-            docFile = nextDocFile;
+
+            if (nextDocFile == null) {
+                // Segment of file's path not writable
+                return null;
+            } else {
+                docFile = nextDocFile;
+            }
         }
 
         return docFile;

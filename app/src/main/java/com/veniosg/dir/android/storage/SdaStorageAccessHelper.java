@@ -44,4 +44,9 @@ class SdaStorageAccessHelper implements StorageAccessHelper {
     public void requestWriteAccess(@NonNull File fileInStorage, @NonNull AccessPermissionListener listener) {
 
     }
+
+    @Override
+    public boolean isSafBased() {
+        return false;
+    }
 }

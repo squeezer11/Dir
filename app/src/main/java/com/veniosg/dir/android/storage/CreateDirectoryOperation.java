@@ -22,6 +22,8 @@ import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
 
+import java.io.File;
+
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 
@@ -35,7 +37,15 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
 
     @Override
     protected boolean operate(CreateDirectoryArguments args) {
-        return args.getTarget().mkdirs();
+        File dest = args.getTarget();
+
+        return dest.exists() || dest.mkdirs();
+    }
+
+    @Override
+    protected boolean operateSaf(CreateDirectoryArguments args) {
+        // TODO SDCARD
+        return false;
     }
 
     @Override

@@ -38,30 +38,35 @@ public abstract class FileOperation<A extends FileOperation.Arguments> {
 
     public final void invoke(A args) {
         onStartOperation(args);
-        boolean normalSucceeded = operate(args);
-        boolean failedBecauseOfNoAccess = !normalSucceeded &&
-                needsWriteAccess() &&
-                !storageAccessHelperCompat.hasWriteAccess(args.getTarget());
-        if (failedBecauseOfNoAccess) {
-            onRequestingAccess();
-            storageAccessHelperCompat.requestWriteAccess(args.getTarget(), new AccessPermissionListener() {
-                @Override
-                public void granted() {
-                    invoke(args);
+        boolean success = operate(args);
+        boolean failedButNeedsAccess = !success && needsWriteAccess();
+        if (failedButNeedsAccess) {
+            if (storageAccessHelperCompat.hasWriteAccess(args.getTarget())) {
+                if (storageAccessHelperCompat.isSafBased()) {
+                    success = operateSaf(args);
                 }
+                onResult(success, args);
+            } else {
+                onRequestingAccess();
+                storageAccessHelperCompat.requestWriteAccess(args.getTarget(), new AccessPermissionListener() {
+                    @Override
+                    public void granted() {
+                        invoke(args);
+                    }
 
-                @Override
-                public void denied() {
-                    onAccessDenied();
-                }
+                    @Override
+                    public void denied() {
+                        onAccessDenied();
+                    }
 
-                @Override
-                public void error() {
-                    invoke(args);
-                }
-            });
+                    @Override
+                    public void error() {
+                        invoke(args);
+                    }
+                });
+            }
         } else {
-            onResult(normalSucceeded, args);
+            onResult(success, args);
         }
     }
 
@@ -73,6 +78,14 @@ public abstract class FileOperation<A extends FileOperation.Arguments> {
      * @return Whether the operation was successful.
      */
     protected abstract boolean operate(A args);
+
+    /**
+     * Try the operation using SAF facilities
+     * Triggered if {@link #operate(Arguments)} returns false and we have write permissions.
+     *
+     * @return Whether the operation was successful.
+     */
+    protected abstract boolean operateSaf(A args);
 
     /**
      * Good place to show initial UI, or prepare any dialogs etc.

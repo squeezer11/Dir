@@ -79,6 +79,12 @@ public class MoveOperation extends FileOperation<MoveArguments> {
     }
 
     @Override
+    protected boolean operateSaf(MoveArguments args) {
+        // TODO SDCARD
+        return false;
+    }
+
+    @Override
     protected void onStartOperation(MoveArguments args) {
     }
 
