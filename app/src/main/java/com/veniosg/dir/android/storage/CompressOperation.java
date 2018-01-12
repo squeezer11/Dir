@@ -46,7 +46,7 @@ public class CompressOperation extends FileOperation<CompressArguments> {
     private final Context context;
 
     public CompressOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.context = context;
     }
 

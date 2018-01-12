@@ -20,7 +20,7 @@ import android.support.annotation.NonNull;
 
 import java.io.File;
 
-public interface StorageAccessHelper {
+public interface StorageAccessManager {
     boolean hasWriteAccess(@NonNull File fileInStorage);
     void requestWriteAccess(@NonNull File fileInStorage, @NonNull AccessPermissionListener listener);
     boolean isSafBased();

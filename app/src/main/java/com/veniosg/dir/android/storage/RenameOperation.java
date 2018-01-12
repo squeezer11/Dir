@@ -30,7 +30,7 @@ import java.util.List;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-import static com.veniosg.dir.android.storage.SafStorageAccessHelper.getOrCreateDocumentFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.getOrCreateTreeDocumentFile;
 import static com.veniosg.dir.android.util.MediaScannerUtils.getPathsOfFolder;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
@@ -38,7 +38,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
     private List<String> affectedPaths = new ArrayList<>();
 
     public RenameOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.context = context;
     }
 
@@ -58,8 +58,8 @@ public class RenameOperation extends FileOperation<RenameArguments> {
         if (dest.exists()) {
             return true;
         } else {
-            DocumentFile documentFile = getOrCreateDocumentFile(from, context);
-            return documentFile != null && documentFile.renameTo(args.getTarget().getName());
+            DocumentFile safFrom = getOrCreateTreeDocumentFile(from, context);
+            return safFrom != null && safFrom.renameTo(args.getTarget().getName());
         }
     }
 

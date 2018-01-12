@@ -40,7 +40,7 @@ public class CopyOperation extends FileOperation<CopyArguments> {
     private final Context context;
 
     public CopyOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.context = context.getApplicationContext();
     }
 

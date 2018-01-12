@@ -19,34 +19,29 @@ package com.veniosg.dir.android.storage;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.veniosg.dir.mvvm.model.storage.StorageAccessHelper;
+import com.veniosg.dir.mvvm.model.storage.StorageAccessManager;
 
 import java.io.File;
 
-/**
- * Uses the Scoped Directory Access to handle external storage permissions.
- * This provides a much improved UX and interface compared to the Storage Access Framework.
- */
-class SdaStorageAccessHelper implements StorageAccessHelper {
-    // TODO SDCARD implement as part of #77
-    private final Context context;
+public class StorageAccessManagerCompat implements StorageAccessManager {
+    private final StorageAccessManager delegate;
 
-    SdaStorageAccessHelper(Context context) {
-        this.context = context.getApplicationContext();
+    public StorageAccessManagerCompat(Context context) {
+        delegate = new SafStorageAccessManager(context);
     }
 
     @Override
     public boolean hasWriteAccess(@NonNull File fileInStorage) {
-        return false;
+        return delegate.hasWriteAccess(fileInStorage);
     }
 
     @Override
     public void requestWriteAccess(@NonNull File fileInStorage, @NonNull AccessPermissionListener listener) {
-
+        delegate.requestWriteAccess(fileInStorage, listener);
     }
 
     @Override
     public boolean isSafBased() {
-        return false;
+        return delegate.isSafBased();
     }
 }

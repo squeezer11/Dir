@@ -47,7 +47,7 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
     private final Context context;
 
     public ExtractOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.context = context;
     }
 

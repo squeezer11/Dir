@@ -21,36 +21,34 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.UriPermission;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.activity.SafPromptActivity;
-import com.veniosg.dir.mvvm.model.storage.StorageAccessHelper;
+import com.veniosg.dir.mvvm.model.storage.StorageAccessManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static android.support.v4.provider.DocumentFile.fromTreeUri;
 import static com.veniosg.dir.IntentConstants.ACTION_STORAGE_ACCESS_RESULT;
 import static com.veniosg.dir.IntentConstants.EXTRA_STORAGE_ACCESS_GRANTED;
+import static com.veniosg.dir.android.util.DocumentFileUtils.getOrCreateTreeDocumentFile;
 import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
 import static com.veniosg.dir.android.util.FileUtils.isWritable;
-import static com.veniosg.dir.android.util.Logger.log;
 import static java.lang.String.format;
 import static java.util.Locale.ROOT;
 
 /**
  * Uses the Storage Access Framework to request and persist access permissions to external storage.
  */
-class SafStorageAccessHelper implements StorageAccessHelper {
+class SafStorageAccessManager implements StorageAccessManager {
     private final Context context;
 
-    SafStorageAccessHelper(Context context) {
+    SafStorageAccessManager(Context context) {
         this.context = context.getApplicationContext();
     }
 
@@ -121,7 +119,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         DocumentFile document = null;
         if (!writable) {
             // Java said not writable, confirm with SAF
-            document = getOrCreateDocumentFile(tmpFile, context);
+            document = getOrCreateTreeDocumentFile(tmpFile, context, false);
 
             if (document != null) {
                 // This should have created the file - otherwise something is wrong with access URL.
@@ -130,7 +128,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         }
 
         // Cleanup
-        safAwareDelete(tmpFile, context, document);
+        safAwareDelete(tmpFile, document);
         return writable;
     }
 
@@ -153,7 +151,7 @@ class SafStorageAccessHelper implements StorageAccessHelper {
      * @return True if successfully deleted.
      */
     @SuppressWarnings("UnusedReturnValue")
-    private boolean safAwareDelete(@NonNull final File file, Context context, @Nullable DocumentFile safFile) {
+    private boolean safAwareDelete(@NonNull final File file, @Nullable DocumentFile safFile) {
         boolean deleteSucceeded = file.delete();
 
         if (!deleteSucceeded && safFile != null) {
@@ -168,72 +166,5 @@ class SafStorageAccessHelper implements StorageAccessHelper {
         File file = new File(filePath);
         return file.lastModified() == documentFile.lastModified()
                 && file.getName().equals(documentFile.getName());
-    }
-
-    /**
-     * Get a DocumentFile corresponding to the given file. If the file doesn't exist, it is created.
-     *
-     * @param file The file to get the DocumentFile representation of.
-     * @return The DocumentFile representing the passed file. Null if the file or its path can't be created.
-     */
-    @Nullable
-    public static DocumentFile getOrCreateDocumentFile(final File file, Context context) {
-        String storageRoot = getExternalStorageRoot(file, context);
-        if (storageRoot == null) return null;   // File is not on external storage
-
-        boolean fileIsStorageRoot = false;
-        String pathRelativeToRoot = null;
-        try {
-            String path = file.getCanonicalPath();
-            if (!storageRoot.equals(path)) {
-                pathRelativeToRoot = path.substring(storageRoot.length() + 1);
-            } else {
-                fileIsStorageRoot = true;
-            }
-        } catch (IOException e) {
-            log("Could not get canonical path of File while getting DocumentFile");
-            return null;
-        } catch (SecurityException e) {
-            fileIsStorageRoot = true;
-        }
-
-        // TODO SDCARD it looks like we need to persist (or otherwise get all permitted roots here) and walk their subtrees....
-        // TODO SDCARD we should try to make sure that the uris we're persisting ARE storage roots, otherwise we should just drop them
-
-
-//        String uriString = PreferenceManager.getDefaultSharedPreferences(context).getString("URI", null);
-//        if (uriString == null) return null;
-//        Uri docTreeUri = parse(uriString);
-        // TODO SDCARD this should be reading off a list of uris we have access to
-        Uri docTreeUri = Uri.parse("content://com.android.externalstorage.documents/tree/6338-3934%3A");
-
-        // Find the file we need down the granted storage tree.
-        DocumentFile docFile = fromTreeUri(context, docTreeUri);
-        if (fileIsStorageRoot) return docFile;
-
-        String[] segments = pathRelativeToRoot.split("/");
-        for (int i = 0; i < segments.length; i++) {
-
-            String segment = segments[i];
-            boolean isLastSegment = i == segments.length - 1;
-            DocumentFile nextDocFile = docFile.findFile(segment);
-
-            if (nextDocFile == null) {
-                if (isLastSegment) {
-                    nextDocFile = docFile.createFile("image/png", segment);
-                } else {
-                    nextDocFile = docFile.createDirectory(segment);
-                }
-            }
-
-            if (nextDocFile == null) {
-                // Segment of file's path not writable
-                return null;
-            } else {
-                docFile = nextDocFile;
-            }
-        }
-
-        return docFile;
     }
 }

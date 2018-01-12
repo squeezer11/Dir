@@ -18,8 +18,8 @@ package com.veniosg.dir.mvvm.model.storage;
 
 import android.support.annotation.NonNull;
 
-import com.veniosg.dir.android.storage.StorageAccessHelperCompat;
-import com.veniosg.dir.mvvm.model.storage.StorageAccessHelper.AccessPermissionListener;
+import com.veniosg.dir.android.storage.StorageAccessManagerCompat;
+import com.veniosg.dir.mvvm.model.storage.StorageAccessManager.AccessPermissionListener;
 
 import java.io.File;
 
@@ -29,10 +29,10 @@ import static java.util.UUID.randomUUID;
  * @param <A> Container type for operation arguments.
  */
 public abstract class FileOperation<A extends FileOperation.Arguments> {
-    private StorageAccessHelperCompat storageAccessHelperCompat;
+    private StorageAccessManagerCompat storageAccessHelperCompat;
     private int id = randomUUID().hashCode();
 
-    protected FileOperation(StorageAccessHelperCompat storageAccessHelperCompat) {
+    protected FileOperation(StorageAccessManagerCompat storageAccessHelperCompat) {
         this.storageAccessHelperCompat = storageAccessHelperCompat;
     }
 

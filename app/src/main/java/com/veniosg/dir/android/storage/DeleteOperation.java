@@ -41,7 +41,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     private ProgressDialog dialog;
 
     public DeleteOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.mainThreadHandler = new Handler(context.getMainLooper());
         this.context = context.getApplicationContext();
 

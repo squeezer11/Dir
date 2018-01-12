@@ -26,12 +26,13 @@ import java.io.File;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
+import static com.veniosg.dir.android.util.DocumentFileUtils.getOrCreateTreeDocumentFile;
 
 public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArguments> {
     private Context context;
 
     public CreateDirectoryOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.context = context;
     }
 
@@ -44,8 +45,9 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
 
     @Override
     protected boolean operateSaf(CreateDirectoryArguments args) {
-        // TODO SDCARD
-        return false;
+        File dest = args.getTarget();
+
+        return dest.exists() || getOrCreateTreeDocumentFile(dest, context, true) != null;
     }
 
     @Override

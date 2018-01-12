@@ -34,7 +34,7 @@ public class MoveOperation extends FileOperation<MoveArguments> {
     private final Context context;
 
     public MoveOperation(Context context) {
-        super(new StorageAccessHelperCompat(context));
+        super(new StorageAccessManagerCompat(context));
         this.context = context.getApplicationContext();
     }
 
