@@ -29,14 +29,14 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 
 import com.veniosg.dir.R;
-import com.veniosg.dir.android.storage.CreateDirectoryOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.CreateDirectoryOperation;
 
 import java.io.File;
 
 import static android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
 import static android.view.inputmethod.EditorInfo.IME_ACTION_GO;
 import static com.veniosg.dir.IntentConstants.EXTRA_DIR_PATH;
-import static com.veniosg.dir.android.storage.CreateDirectoryArguments.createDirectoryArguments;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.CreateDirectoryArguments.createDirectoryArguments;
 
 public class CreateDirectoryDialog extends DialogFragment {
     private CharSequence text;

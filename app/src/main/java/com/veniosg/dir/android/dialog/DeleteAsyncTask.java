@@ -20,10 +20,10 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-import com.veniosg.dir.android.storage.DeleteOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.DeleteOperation;
 import com.veniosg.dir.mvvm.model.FileHolder;
 
-import static com.veniosg.dir.android.storage.DeleteArguments.deleteArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.DeleteArguments.deleteArgs;
 
 class DeleteAsyncTask extends AsyncTask<FileHolder, Void, Void> {
     private final Context context;

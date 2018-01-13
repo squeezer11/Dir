@@ -21,16 +21,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
-import com.veniosg.dir.android.storage.CompressOperation;
-import com.veniosg.dir.android.storage.ExtractOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.CompressOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.ExtractOperation;
 import com.veniosg.dir.mvvm.model.FileHolder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.veniosg.dir.android.storage.CompressArguments.compressArgs;
-import static com.veniosg.dir.android.storage.ExtractArguments.extractArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.CompressArguments.compressArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.ExtractArguments.extractArgs;
 import static java.util.Collections.singletonList;
 
 public class ZipService extends IntentService {

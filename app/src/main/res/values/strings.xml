@@ -154,4 +154,5 @@
     <string name="contact">Contact</string>
     <string name="donation_thanks">Thanks for supporting Dir! ❤</string>
     <string name="purchase_cancelled">Purchase canceled</string>
+    <string name="select_sd_root">Please select the SD Card root</string>
 </resources>

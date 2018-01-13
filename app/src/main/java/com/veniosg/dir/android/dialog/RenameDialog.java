@@ -29,13 +29,13 @@ import android.widget.LinearLayout;
 
 import com.veniosg.dir.IntentConstants;
 import com.veniosg.dir.R;
-import com.veniosg.dir.android.storage.RenameArguments;
-import com.veniosg.dir.android.storage.RenameOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.argument.RenameArguments;
+import com.veniosg.dir.mvvm.model.storage.operation.RenameOperation;
 import com.veniosg.dir.mvvm.model.FileHolder;
 
 import static android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
 import static android.view.inputmethod.EditorInfo.IME_ACTION_GO;
-import static com.veniosg.dir.android.storage.RenameArguments.renameArguments;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.RenameArguments.renameArguments;
 
 public class RenameDialog extends DialogFragment {
     private FileHolder mFileHolder;

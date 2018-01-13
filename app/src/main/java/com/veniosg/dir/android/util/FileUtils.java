@@ -42,6 +42,7 @@ import static android.content.Intent.ACTION_VIEW;
 import static com.veniosg.dir.android.provider.FileManagerProvider.FILE_PROVIDER_PREFIX;
 import static com.veniosg.dir.android.util.Logger.log;
 import static java.lang.Integer.MAX_VALUE;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * @author Peli
@@ -385,7 +386,7 @@ public class FileUtils {
             return null;
         }
 
-        String[] extSdPaths = getExtSdCardPaths(context);
+        List<String> extSdPaths = getExtSdCardPaths(context);
         for (String extSdPath : extSdPaths) {
             if (filePath.startsWith(extSdPath)) return extSdPath;
         }
@@ -397,7 +398,7 @@ public class FileUtils {
      *
      * @return A list of external SD card paths.
      */
-    private static String[] getExtSdCardPaths(Context context) {
+    public static List<String> getExtSdCardPaths(Context context) {
         File[] externalStorageFilesDirs = context.getExternalFilesDirs(null);
         File primaryStorageFilesDir = context.getExternalFilesDir(null);
         List<String> externalStorageRoots = new ArrayList<>();
@@ -419,6 +420,6 @@ public class FileUtils {
         }
 
         int rootsCount = externalStorageRoots.size();
-        return externalStorageRoots.toArray(new String[rootsCount]);
+        return unmodifiableList(externalStorageRoots);
     }
 }

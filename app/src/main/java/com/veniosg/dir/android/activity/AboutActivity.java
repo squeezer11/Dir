@@ -29,7 +29,7 @@ import android.widget.TextView;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.util.Logger;
-import com.veniosg.dir.android.view.CheatSheet;
+import com.veniosg.dir.android.ui.CheatSheet;
 import com.veniosg.dir.mvvm.model.iab.BillingManager;
 
 import static android.content.Intent.ACTION_SENDTO;

@@ -23,16 +23,16 @@ import android.net.Uri;
 import android.os.StatFs;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.storage.CopyOperation;
-import com.veniosg.dir.android.storage.MoveOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.CopyOperation;
+import com.veniosg.dir.mvvm.model.storage.operation.MoveOperation;
 import com.veniosg.dir.mvvm.model.FileHolder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.veniosg.dir.android.storage.CopyArguments.copyArgs;
-import static com.veniosg.dir.android.storage.MoveArguments.moveArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.CopyArguments.copyArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.MoveArguments.moveArgs;
 import static com.veniosg.dir.android.util.FileUtils.folderSize;
 import static com.veniosg.dir.android.util.Notifier.showNotEnoughSpaceNotification;
 
