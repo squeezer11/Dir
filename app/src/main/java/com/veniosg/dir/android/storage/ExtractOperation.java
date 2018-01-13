@@ -17,6 +17,9 @@
 package com.veniosg.dir.android.storage;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.util.MediaScannerUtils;
@@ -27,14 +30,18 @@ import com.veniosg.dir.mvvm.model.storage.FileOperation;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static com.veniosg.dir.android.util.DocumentFileUtils.createDirectory;
+import static com.veniosg.dir.android.util.DocumentFileUtils.createFile;
 import static com.veniosg.dir.android.util.FileUtils.delete;
 import static com.veniosg.dir.android.util.Logger.log;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
@@ -53,40 +60,12 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
 
     @Override
     protected boolean operate(ExtractArguments args) {
-        List<FileHolder> zipHolders = args.getZipFiles();
-        File dstDirectory = args.getTarget();
-        List<ZipFile> zipFiles;
-        try {
-            zipFiles = fileHoldersToZipFiles(zipHolders);
-        } catch (IOException e) {
-            log(e);
-            return false;
-        }
-        int fileCount = countFilesInZip(zipFiles);
-        int extractedCount = 0;
-
-        for (ZipFile zipFile : zipFiles) {
-            for (Enumeration e = zipFile.entries(); e.hasMoreElements(); ) {
-                ZipEntry entry = (ZipEntry) e.nextElement();
-
-                showExtractProgressNotification(extractedCount, fileCount,
-                        getLastPathSegment(entry.getName()),
-                        getLastPathSegment(zipFile.getName()),
-                        getId(), context);
-
-                boolean extractSuccessful = extractCore(zipFile, entry, dstDirectory);
-                if (!extractSuccessful) return false;
-                extractedCount++;
-            }
-        }
-
-        return true;
+        return new NormalExtractor().extract(args);
     }
 
     @Override
     protected boolean operateSaf(ExtractArguments args) {
-        // TODO SDCARD
-        return false;
+        return new SafExtractor().extract(args);
     }
 
     @Override
@@ -106,6 +85,7 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
     @Override
     protected void onAccessDenied() {
         // TODO SDCARD show some toast
+        // toaster(context).writeAccessDenied().show();
     }
 
     @Override
@@ -118,59 +98,126 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
         return true;
     }
 
-    private boolean extractCore(ZipFile zipfile, ZipEntry entry, File outputDir) {
-        if (entry.isDirectory()) {
-            return tryCreateDir(new File(outputDir, entry.getName()));
-        }
-        File outputFile = new File(outputDir, entry.getName());
-        if (!outputFile.getParentFile().exists()) {
-            boolean parentExists = tryCreateDir(outputFile.getParentFile());
-            if (!parentExists) return false;
-        }
-
-        try (
-                BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
-                BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream(outputFile))
-        ) {
-            int len;
-            byte buf[] = new byte[BUFFER_SIZE];
-            while ((len = inputStream.read(buf)) > 0) {
-                outputStream.write(buf, 0, len);
+    private abstract class Extractor {
+        boolean extract(ExtractArguments args) {
+            List<FileHolder> zipHolders = args.getZipFiles();
+            File dstDirectory = args.getTarget();
+            List<ZipFile> zipFiles;
+            try {
+                zipFiles = fileHoldersToZipFiles(zipHolders);
+            } catch (IOException e) {
+                log(e);
+                return false;
             }
-            outputFile.setLastModified(entry.getTime());
-        } catch (IOException e) {
-            log(e);
-            return false;
+            int fileCount = entriesIn(zipFiles);
+            int extractedCount = 0;
+
+            for (ZipFile zipFile : zipFiles) {
+                for (Enumeration e = zipFile.entries(); e.hasMoreElements(); ) {
+                    ZipEntry entry = (ZipEntry) e.nextElement();
+
+                    showExtractProgressNotification(extractedCount, fileCount,
+                            getLastPathSegment(entry.getName()),
+                            getLastPathSegment(zipFile.getName()),
+                            getId(), context);
+
+                    boolean extractSuccessful = extractEntry(zipFile, entry, dstDirectory);
+                    if (!extractSuccessful) return false;
+                    extractedCount++;
+                }
+            }
+
+            return true;
         }
 
-        return true;
-    }
+        private boolean extractEntry(ZipFile zipFile, ZipEntry zipEntry, File outputDir) {
+            if (zipEntry.isDirectory()) {
+                return createDir(new File(outputDir, zipEntry.getName()));
+            }
+            File outputFile = new File(outputDir, zipEntry.getName());
+            if (!outputFile.getParentFile().exists()) {
+                boolean parentCreated = createDir(outputFile.getParentFile());
+                if (!parentCreated) return false;
+            }
 
-    private static List<ZipFile> fileHoldersToZipFiles(List<FileHolder> files) throws IOException {
-        List<ZipFile> zips = new ArrayList<ZipFile>(files.size());
+            try (
+                    BufferedInputStream inputStream =
+                            new BufferedInputStream(zipFile.getInputStream(zipEntry));
+                    BufferedOutputStream outputStream =
+                            new BufferedOutputStream(outputStream(outputFile))
+            ) {
+                int len;
+                byte buf[] = new byte[BUFFER_SIZE];
+                while ((len = inputStream.read(buf)) > 0) {
+                    outputStream.write(buf, 0, len);
+                }
+                //noinspection ResultOfMethodCallIgnored
+                outputFile.setLastModified(zipEntry.getTime());
+            } catch (IOException e) {
+                log(e);
+                return false;
+            }
 
-        for (FileHolder fh : files) {
-            zips.add(new ZipFile(fh.getFile()));
+            return true;
         }
 
-        return zips;
-    }
+        private List<ZipFile> fileHoldersToZipFiles(List<FileHolder> files) throws IOException {
+            List<ZipFile> zips = new ArrayList<>(files.size());
 
-    private int countFilesInZip(List<ZipFile> zipFiles) {
-        int count = 0;
+            for (FileHolder fh : files) {
+                zips.add(new ZipFile(fh.getFile()));
+            }
 
-        for (ZipFile z : zipFiles) {
-            count += z.size();
+            return zips;
         }
 
-        return count;
+        private int entriesIn(List<ZipFile> zipFiles) {
+            int count = 0;
+            for (ZipFile z : zipFiles) count += z.size();
+            return count;
+        }
+
+        abstract boolean createDir(File dir);
+
+        @NonNull
+        abstract OutputStream outputStream(File outputFile) throws FileNotFoundException;
     }
 
-    /**
-     * @param dir Directory to create.
-     * @return True if the directory now exists, false if it couldn't be created.
-     */
-    private boolean tryCreateDir(File dir) {
-        return dir.exists() || dir.mkdirs();
+    private class NormalExtractor extends Extractor {
+        @Override
+        public boolean createDir(File dir) {
+            return dir.exists() || dir.mkdirs();
+        }
+
+        @Override
+        @NonNull
+        public OutputStream outputStream(File outputFile) throws FileNotFoundException {
+            return new FileOutputStream(outputFile);
+        }
+    }
+
+    private class SafExtractor extends Extractor {
+        @Override
+        boolean createDir(File dir) {
+            return dir.exists() || createDirectory(context, dir) != null;
+        }
+
+        @NonNull
+        @Override
+        OutputStream outputStream(File outputFile) throws FileNotFoundException, NullPointerException {
+            String msg = "Could not open output stream for zip file";
+
+            DocumentFile toSaf = createFile(context, outputFile, "application/zip");
+            throwIfNull(toSaf, msg);
+
+            OutputStream out = context.getContentResolver().openOutputStream(toSaf.getUri());
+            throwIfNull(out, msg);
+
+            return out;
+        }
+    }
+
+    private void throwIfNull(@Nullable Object o, @NonNull String msg) {
+        if (o == null) throw new NullPointerException(msg);
     }
 }
