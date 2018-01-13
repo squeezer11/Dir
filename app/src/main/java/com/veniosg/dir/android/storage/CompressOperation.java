@@ -39,8 +39,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static com.veniosg.dir.android.util.DocumentFileUtils.createFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.safAwareDelete;
 import static com.veniosg.dir.android.util.FileUtils.countFilesUnder;
-import static com.veniosg.dir.android.util.FileUtils.delete;
 import static com.veniosg.dir.android.util.Logger.log;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
 import static com.veniosg.dir.android.util.Notifier.showCompressProgressNotification;
@@ -77,7 +77,7 @@ public class CompressOperation extends FileOperation<CompressArguments> {
     @Override
     protected void onResult(boolean success, CompressArguments args) {
         File target = args.getTarget();
-        if (!success) delete(target);
+        if (!success) safAwareDelete(context, target);
 
         MediaScannerUtils.informFileAdded(context, target);
         Notifier.showCompressDoneNotification(success, getId(), target, context);
@@ -86,7 +86,6 @@ public class CompressOperation extends FileOperation<CompressArguments> {
 
     @Override
     protected void onAccessDenied() {
-        // TODO SDCARD show some toast
     }
 
     @Override

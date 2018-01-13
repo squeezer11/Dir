@@ -312,7 +312,7 @@ public class FileUtils {
             }
         }
 
-        // Delete file itself
+        // Delete the file itself
         res &= fileOrDirectory.delete();
 
         return res;

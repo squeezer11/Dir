@@ -10,10 +10,28 @@ import java.io.File;
 import java.io.IOException;
 
 import static android.support.v4.provider.DocumentFile.fromTreeUri;
+import static com.veniosg.dir.android.util.FileUtils.delete;
 import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
 import static com.veniosg.dir.android.util.Logger.log;
 
 public abstract class DocumentFileUtils {
+    /**
+     * Delete a file. May be even on external SD card.
+     *
+     * @param file    the file to be deleted.
+     * @return True if successfully deleted.
+     */
+    public static boolean safAwareDelete(@NonNull Context context, @NonNull final File file) {
+        boolean deleteSucceeded = delete(file);
+
+        if (!deleteSucceeded) {
+            DocumentFile safFile = findFile(context, file);
+            if (safFile != null) deleteSucceeded = safFile.delete();
+        }
+
+        return deleteSucceeded && !file.exists();
+    }
+
     @Nullable
     public static DocumentFile findFile(Context context, final File file) {
         if (!file.exists()) {
@@ -110,5 +128,4 @@ public abstract class DocumentFileUtils {
 
         return docFile;
     }
-
 }

@@ -85,7 +85,6 @@ public class CopyOperation extends FileOperation<CopyArguments> {
 
     @Override
     protected void onAccessDenied() {
-        // TODO SDCARD show some toast
     }
 
     @Override

@@ -25,8 +25,8 @@ import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.util.DocumentFileUtils;
 import com.veniosg.dir.android.util.MediaScannerUtils;
+import com.veniosg.dir.android.view.toast.ToastFactory;
 import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
 
@@ -34,19 +34,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.widget.Toast.LENGTH_LONG;
-import static android.widget.Toast.makeText;
 import static com.veniosg.dir.android.util.DocumentFileUtils.findFile;
 import static com.veniosg.dir.android.util.FileUtils.delete;
 
 public class DeleteOperation extends FileOperation<DeleteArguments> {
     private final Context context;
+    private final ToastFactory toastFactory;
     private final Handler mainThreadHandler;
     private ProgressDialog dialog;
 
     public DeleteOperation(Context context) {
         super(new StorageAccessManagerCompat(context));
         this.mainThreadHandler = new Handler(context.getMainLooper());
+        this.toastFactory = new ToastFactory(context);
         this.context = context.getApplicationContext();
 
         runOnUi(() -> dialog = new ProgressDialog(context));
@@ -98,10 +98,13 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     @Override
     protected void onResult(boolean success, DeleteArguments args) {
         runOnUi(() -> {
-            makeText(dialog.getContext(), success ?
-                    R.string.delete_success : R.string.delete_failure, LENGTH_LONG)
-                    .show();
-            FileListFragment.refresh(context, args.getTarget());
+            if (success) {
+                toastFactory.deleteSuccess().show();
+                FileListFragment.refresh(context, args.getTarget());
+            } else {
+                toastFactory.deleteFailure().show();
+            }
+
             dialog.dismiss();
         });
     }

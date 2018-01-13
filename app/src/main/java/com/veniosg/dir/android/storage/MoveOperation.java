@@ -95,7 +95,6 @@ public class MoveOperation extends FileOperation<MoveArguments> {
 
     @Override
     protected void onAccessDenied() {
-        // TODO SDCARD show some toast
     }
 
     @Override

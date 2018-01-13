@@ -19,28 +19,27 @@ package com.veniosg.dir.android.storage;
 import android.content.Context;
 import android.support.v4.provider.DocumentFile;
 
-import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.util.DocumentFileUtils;
 import com.veniosg.dir.android.util.MediaScannerUtils;
+import com.veniosg.dir.android.view.toast.ToastFactory;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.widget.Toast.LENGTH_SHORT;
-import static android.widget.Toast.makeText;
 import static com.veniosg.dir.android.util.DocumentFileUtils.findFile;
 import static com.veniosg.dir.android.util.MediaScannerUtils.getPathsOfFolder;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
-    private Context context;
+    private final Context context;
+    private final ToastFactory toastFactory;
     private List<String> affectedPaths = new ArrayList<>();
 
     public RenameOperation(Context context) {
         super(new StorageAccessManagerCompat(context));
         this.context = context;
+        this.toastFactory = new ToastFactory(context);
     }
 
     @Override
@@ -76,15 +75,10 @@ public class RenameOperation extends FileOperation<RenameArguments> {
 
     @Override
     protected void onResult(boolean success, RenameArguments args) {
-        makeText(
-                context,
-                success ? R.string.rename_success : R.string.rename_failure,
-                LENGTH_SHORT
-        ).show();
-
         if (success) {
-            File dest = args.getTarget();
+            toastFactory.renameSuccess().show();
 
+            File dest = args.getTarget();
             FileListFragment.refresh(context, dest.getParentFile());
             MediaScannerUtils.informPathsDeleted(context, affectedPaths);
             if (dest.isFile()) {
@@ -92,12 +86,13 @@ public class RenameOperation extends FileOperation<RenameArguments> {
             } else {
                 MediaScannerUtils.informFolderAdded(context, dest);
             }
+        } else {
+            toastFactory.renameFailure().show();
         }
     }
 
     @Override
     protected void onAccessDenied() {
-        // TODO SDCARD show some toast
     }
 
     @Override

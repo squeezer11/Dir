@@ -42,6 +42,7 @@ import java.util.zip.ZipFile;
 
 import static com.veniosg.dir.android.util.DocumentFileUtils.createDirectory;
 import static com.veniosg.dir.android.util.DocumentFileUtils.createFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.safAwareDelete;
 import static com.veniosg.dir.android.util.FileUtils.delete;
 import static com.veniosg.dir.android.util.Logger.log;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
@@ -75,7 +76,7 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
     @Override
     protected void onResult(boolean success, ExtractArguments args) {
         File to = args.getTarget();
-        if (!success) delete(to);
+        if (!success) safAwareDelete(context, to);
 
         MediaScannerUtils.informFileAdded(context, to);
         Notifier.showExtractDoneNotification(success, getId(), to, context);
@@ -84,8 +85,6 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
 
     @Override
     protected void onAccessDenied() {
-        // TODO SDCARD show some toast
-        // toaster(context).writeAccessDenied().show();
     }
 
     @Override

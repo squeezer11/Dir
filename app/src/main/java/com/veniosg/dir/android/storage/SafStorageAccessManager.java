@@ -37,6 +37,7 @@ import static android.support.v4.provider.DocumentFile.fromTreeUri;
 import static com.veniosg.dir.IntentConstants.ACTION_STORAGE_ACCESS_RESULT;
 import static com.veniosg.dir.IntentConstants.EXTRA_STORAGE_ACCESS_GRANTED;
 import static com.veniosg.dir.android.util.DocumentFileUtils.createFile;
+import static com.veniosg.dir.android.util.DocumentFileUtils.safAwareDelete;
 import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
 import static com.veniosg.dir.android.util.FileUtils.isWritable;
 import static java.lang.String.format;
@@ -116,7 +117,7 @@ class SafStorageAccessManager implements StorageAccessManager {
         boolean writable = false;
         if (isWritable(tmpFile)) writable = true;
 
-        DocumentFile document = null;
+        DocumentFile document;
         if (!writable) {
             // Java said not writable, confirm with SAF
             document = createFile(context, tmpFile, "image/png");
@@ -127,7 +128,7 @@ class SafStorageAccessManager implements StorageAccessManager {
         }
 
         // Cleanup
-        safAwareDelete(tmpFile, document);
+        safAwareDelete(context, tmpFile);
         return writable;
     }
 
@@ -140,24 +141,6 @@ class SafStorageAccessManager implements StorageAccessManager {
             dummyFile = new File(parent, fileName);
         } while (dummyFile.exists());
         return dummyFile;
-    }
-
-    /**
-     * Delete a file. May be even on external SD card.
-     *
-     * @param file    the file to be deleted.
-     * @param safFile Document to use if normal deletion fails.
-     * @return True if successfully deleted.
-     */
-    @SuppressWarnings("UnusedReturnValue")
-    private boolean safAwareDelete(@NonNull final File file, @Nullable DocumentFile safFile) {
-        boolean deleteSucceeded = file.delete();
-
-        if (!deleteSucceeded && safFile != null) {
-            deleteSucceeded = safFile.delete();
-        }
-
-        return deleteSucceeded && !file.exists();
     }
 
     private boolean areSameFile(@Nullable String filePath, DocumentFile documentFile) {

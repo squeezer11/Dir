@@ -18,22 +18,22 @@ package com.veniosg.dir.android.storage;
 
 import android.content.Context;
 
-import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
+import com.veniosg.dir.android.view.toast.ToastFactory;
 import com.veniosg.dir.mvvm.model.storage.FileOperation;
 
 import java.io.File;
 
-import static android.widget.Toast.LENGTH_SHORT;
-import static android.widget.Toast.makeText;
 import static com.veniosg.dir.android.util.DocumentFileUtils.createDirectory;
 
 public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArguments> {
-    private Context context;
+    private final Context context;
+    private final ToastFactory toastFactory;
 
     public CreateDirectoryOperation(Context context) {
         super(new StorageAccessManagerCompat(context));
         this.context = context;
+        this.toastFactory = new ToastFactory(context);
     }
 
     @Override
@@ -56,17 +56,16 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
 
     @Override
     protected void onResult(boolean success, CreateDirectoryArguments args) {
-        makeText(context,
-                success ? R.string.create_dir_success : R.string.create_dir_failure,
-                LENGTH_SHORT
-        ).show();
-
-        if (success) FileListFragment.refresh(context, args.getTarget().getParentFile());
+        if (success) {
+            toastFactory.createDirectorySuccess().show();
+            FileListFragment.refresh(context, args.getTarget().getParentFile());
+        } else {
+            toastFactory.createDirectoryFailure().show();
+        }
     }
 
     @Override
     protected void onAccessDenied() {
-        // TODO SDCARD show some toast
     }
 
     @Override
