@@ -24,12 +24,15 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.veniosg.dir.R;
+
 import static android.content.Intent.ACTION_OPEN_DOCUMENT_TREE;
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 import static android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
 import static com.veniosg.dir.IntentConstants.ACTION_STORAGE_ACCESS_RESULT;
 import static com.veniosg.dir.IntentConstants.EXTRA_STORAGE_ACCESS_GRANTED;
 import static com.veniosg.dir.android.ui.Themer.getTranslucentThemeId;
+import static com.veniosg.dir.android.util.Utils.viewUri;
 
 public class SafPromptActivity extends Activity {
     private static final int REQUEST_CODE_SAF = 1;
@@ -46,11 +49,16 @@ public class SafPromptActivity extends Activity {
         // theme and then rewrite it with our own theme to match the rest of the app's style.
         getTheme().applyStyle(getTranslucentThemeId(this), true);
 
-        // TODO SDCARD Update dialog content!
         new AlertDialog.Builder(this)
-                .setTitle("WRITE ACCESS REQUEST")
-                .setMessage("YOU NEED TO GRANT DEM RIGHTS\nInstructions: http://pxhouse.co/sdcard")
-                .setPositiveButton("GOTOSAF", new DialogInterface.OnClickListener() {
+                .setTitle(R.string.write_access_required)
+                .setMessage(R.string.saf_dialog_message)
+                .setNeutralButton(R.string.help, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        viewUri(SafPromptActivity.this, "http://pxhouse.co/saf", null);
+                    }
+                })
+                .setPositiveButton(R.string.grant_access, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         Intent safPickIntent = new Intent(ACTION_OPEN_DOCUMENT_TREE);

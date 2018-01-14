@@ -406,7 +406,7 @@ public class FileUtils {
             if (extFilesDir != null && !extFilesDir.equals(primaryStorageFilesDir)) {
                 int rootPathEndIndex = extFilesDir.getAbsolutePath().lastIndexOf("/Android/data");
                 if (rootPathEndIndex < 0) {
-                    log("Unexpected external storage directory");
+                    log("Unexpected external storage directory.");
                 } else {
                     String path = extFilesDir.getAbsolutePath().substring(0, rootPathEndIndex);
                     try {
