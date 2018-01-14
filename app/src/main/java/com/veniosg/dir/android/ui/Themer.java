@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.support.annotation.StyleRes;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.PreferenceFragment;
@@ -42,6 +43,20 @@ public abstract class Themer {
             case DARK:
                 act.setTheme(R.style.Theme_Dir_Dark);
                 break;
+        }
+    }
+
+    @StyleRes
+    public static int getTranslucentThemeId(Activity activity) {
+        switch (Theme.values()[PreferenceFragment.getThemeIndex(activity)]) {
+            case DIR:
+                return R.style.Theme_Dir_Translucent;
+            case GRAYSCALE:
+                return R.style.Theme_Dir_Grayscale_Translucent;
+            case DARK:
+                return R.style.Theme_Dir_Dark_Translucent;
+            default:
+                return android.R.style.Theme_Translucent;
         }
     }
 

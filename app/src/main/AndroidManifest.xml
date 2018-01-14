@@ -40,6 +40,9 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".android.activity.SafPromptActivity"
+            android:theme="@style/Theme.Dir.Translucent" />
+        <activity
             android:name=".android.activity.PreferenceActivity"
             android:label="@string/settings" />
         <activity
@@ -113,7 +116,6 @@
                 <category android:name="android.intent.category.OPENABLE" />
             </intent-filter>
         </activity>
-        <activity android:name=".android.activity.SafPromptActivity" />
 
         <activity-alias
             android:name=".activity.FileManagerActivity"

@@ -16,22 +16,22 @@
 
 package com.veniosg.dir.android.activity;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
-
-import com.veniosg.dir.R;
 
 import static android.content.Intent.ACTION_OPEN_DOCUMENT_TREE;
 import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 import static android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
 import static com.veniosg.dir.IntentConstants.ACTION_STORAGE_ACCESS_RESULT;
 import static com.veniosg.dir.IntentConstants.EXTRA_STORAGE_ACCESS_GRANTED;
+import static com.veniosg.dir.android.ui.Themer.getTranslucentThemeId;
 
-public class SafPromptActivity extends BaseActivity {
+public class SafPromptActivity extends Activity {
     private static final int REQUEST_CODE_SAF = 1;
 
     private boolean granted = false;
@@ -40,9 +40,13 @@ public class SafPromptActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO SDCARD Fix theming
-        setTheme(R.style.Theme_AppCompat);
+        // Android can't apply the translucent flag at runtime and trying to set or update the theme
+        // (even when it has already been set as translucent by the manifest-defined theme) results
+        // in a black background. So we just piggyback off the system respecting the manifest-defined
+        // theme and then rewrite it with our own theme to match the rest of the app's style.
+        getTheme().applyStyle(getTranslucentThemeId(this), true);
 
+        // TODO SDCARD Update dialog content!
         new AlertDialog.Builder(this)
                 .setTitle("WRITE ACCESS REQUEST")
                 .setMessage("YOU NEED TO GRANT DEM RIGHTS\nInstructions: http://pxhouse.co/sdcard")
