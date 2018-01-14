@@ -45,7 +45,7 @@ public class SafPromptActivity extends BaseActivity {
 
         new AlertDialog.Builder(this)
                 .setTitle("WRITE ACCESS REQUEST")
-                .setMessage("YOU NEED TO GRANT DEM RIGHTS")
+                .setMessage("YOU NEED TO GRANT DEM RIGHTS\nInstructions: http://pxhouse.co/sdcard")
                 .setPositiveButton("GOTOSAF", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
