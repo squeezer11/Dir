@@ -23,10 +23,11 @@ import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.ui.toast.ToastFactory;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.util.Notifier;
 import com.veniosg.dir.mvvm.model.FileHolder;
+import com.veniosg.dir.mvvm.model.storage.DocumentFileUtils;
+import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.CompressArguments;
 
 import java.io.BufferedOutputStream;
@@ -35,17 +36,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createFile;
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.safAwareDelete;
 import static com.veniosg.dir.android.util.FileUtils.countFilesUnder;
 import static com.veniosg.dir.android.util.Logger.log;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
 import static com.veniosg.dir.android.util.Notifier.showCompressProgressNotification;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createFile;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.safAwareDelete;
 
 public class CompressOperation extends FileOperation<CompressArguments> {
     private static final int BUFFER_SIZE = 1024;
@@ -102,14 +102,8 @@ public class CompressOperation extends FileOperation<CompressArguments> {
 
     @Nullable
     private BufferedOutputStream outputStreamFor(DocumentFile toSaf) {
-        String msg = "Could not open output stream for zip file";
         try {
-            throwIfNull(toSaf, msg);
-
-            OutputStream out = context.getContentResolver().openOutputStream(toSaf.getUri());
-            throwIfNull(out, msg);
-
-            return new BufferedOutputStream(out);
+            return new BufferedOutputStream(DocumentFileUtils.outputStreamFor(toSaf, context));
         } catch (NullPointerException | FileNotFoundException e) {
             log(e);
             return null;

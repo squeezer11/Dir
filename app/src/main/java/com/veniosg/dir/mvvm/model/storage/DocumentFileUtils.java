@@ -8,7 +8,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.provider.DocumentFile;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import static android.support.v4.provider.DocumentFile.fromTreeUri;
@@ -18,6 +20,18 @@ import static com.veniosg.dir.android.util.FileUtils.getExternalStorageRoot;
 import static com.veniosg.dir.android.util.Logger.log;
 
 public abstract class DocumentFileUtils {
+    @NonNull
+    public static OutputStream outputStreamFor(@Nullable DocumentFile outFile, @NonNull Context context)
+            throws NullPointerException, FileNotFoundException {
+        String msg = "Could not open DocumentFile OutputStream";
+        if (outFile == null) throw new NullPointerException(msg);
+
+        OutputStream out = context.getContentResolver().openOutputStream(outFile.getUri());
+        if (out == null) throw new NullPointerException(msg);
+
+        return out;
+    }
+
     /**
      * Very crude check.
      *

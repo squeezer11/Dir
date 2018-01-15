@@ -18,15 +18,14 @@ package com.veniosg.dir.mvvm.model.storage.operation;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.ui.toast.ToastFactory;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.util.Notifier;
 import com.veniosg.dir.mvvm.model.FileHolder;
+import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.ExtractArguments;
 
 import java.io.BufferedInputStream;
@@ -42,13 +41,14 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createDirectory;
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createFile;
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.safAwareDelete;
 import static com.veniosg.dir.android.util.Logger.log;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
 import static com.veniosg.dir.android.util.Notifier.showExtractProgressNotification;
 import static com.veniosg.dir.android.util.Utils.getLastPathSegment;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createDirectory;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createFile;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.outputStreamFor;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.safAwareDelete;
 
 public class ExtractOperation extends FileOperation<ExtractArguments> {
     private static final int BUFFER_SIZE = 1024;
@@ -205,19 +205,8 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
         @NonNull
         @Override
         OutputStream outputStream(File outputFile) throws FileNotFoundException, NullPointerException {
-            String msg = "Could not open output stream for zip file";
-
             DocumentFile toSaf = createFile(context, outputFile, "application/zip");
-            throwIfNull(toSaf, msg);
-
-            OutputStream out = context.getContentResolver().openOutputStream(toSaf.getUri());
-            throwIfNull(out, msg);
-
-            return out;
+            return outputStreamFor(toSaf, context);
         }
-    }
-
-    private void throwIfNull(@Nullable Object o, @NonNull String msg) {
-        if (o == null) throw new NullPointerException(msg);
     }
 }
