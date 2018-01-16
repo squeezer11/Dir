@@ -15,6 +15,18 @@ public abstract class OperationStatusDisplayerInjector {
         }
 
         @Override
+        public void showMoveProgress(int operationId, File destDir, File moving, int progress, int max) {
+        }
+
+        @Override
+        public void showMoveSuccess(int operationId, File destDir) {
+        }
+
+        @Override
+        public void showMoveFailure(int operationId, File destDir) {
+        }
+
+        @Override
         public void showCopyProgress(int operationId, File destDir, File copying, int progress, int max) {
         }
     };

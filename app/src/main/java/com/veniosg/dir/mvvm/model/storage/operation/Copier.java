@@ -24,6 +24,11 @@ import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createDirecto
 import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createFile;
 import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.outputStreamFor;
 
+/**
+ * While worker classes like this are generally only required as a means to keep common logic
+ * between normal and saf versions of operations centralized and should therefore reside within the
+ * operation, this had to move out because of the inability of SAF to move files.
+ */
 abstract class Copier {
     private static final int COPY_BUFFER_SIZE = 32 * 1024;
 

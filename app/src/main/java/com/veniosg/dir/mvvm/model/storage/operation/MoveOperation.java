@@ -32,8 +32,6 @@ import java.util.List;
 import static com.veniosg.dir.android.fragment.FileListFragment.refresh;
 import static com.veniosg.dir.android.util.FileUtils.getPathsUnder;
 import static com.veniosg.dir.android.util.Notifier.clearNotification;
-import static com.veniosg.dir.android.util.Notifier.showMoveDoneNotification;
-import static com.veniosg.dir.android.util.Notifier.showMoveProgressNotification;
 import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.safAwareDelete;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.CopyArguments.copyArgs;
 import static com.veniosg.dir.mvvm.model.storage.operation.ui.OperationStatusDisplayerInjector.noOpStatusDisplayer;
@@ -65,9 +63,12 @@ public class MoveOperation extends FileOperation<MoveArguments> {
 
     @Override
     protected void onResult(boolean success, MoveArguments args) {
-        showMoveDoneNotification(success, getId(), args.getTarget().getPath(), context);
-
-        if (success) refresh(context, args.getTarget());
+        if (success) {
+            statusDisplayer.showMoveSuccess(getId(), args.getTarget());
+            refresh(context, args.getTarget());
+        } else {
+            statusDisplayer.showMoveFailure(getId(), args.getTarget());
+        }
     }
 
     @Override
@@ -94,8 +95,8 @@ public class MoveOperation extends FileOperation<MoveArguments> {
             File target = args.getTarget();
             List<FileHolder> files = args.getFilesToMove();
             for (FileHolder fh : files) {
-                showMoveProgressNotification(fileIndex++, files.size(), getId(), fh.getFile(),
-                        target.getPath(), context);
+                statusDisplayer.showMoveProgress(getId(), target, fh.getFile(),
+                        fileIndex++, files.size());
 
                 from = fh.getFile().getAbsoluteFile();
                 toFile = new File(target, fh.getName());
@@ -135,7 +136,6 @@ public class MoveOperation extends FileOperation<MoveArguments> {
                     .copy(copyArgs(singletonList(what), futureWhat.getParentFile()));
             // Only delete if full tree was copied. Spare files are bad, disappearing files is worse
             return copySucceeded && safAwareDelete(context, what.getFile());
-            // TODO SDCARD migrate move and extract notifications to StatusDisplayer
         }
     }
 }

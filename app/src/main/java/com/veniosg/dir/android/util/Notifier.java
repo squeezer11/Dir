@@ -52,59 +52,6 @@ public abstract class Notifier {
         return super.clone();
     }
 
-    public static void showMoveProgressNotification(int filesMoved, int fileCount, int notifId,
-                                                    File fileBeingMoved, String toPath, Context context) {
-        Notification not = new NotificationCompat.Builder(context)
-                .setAutoCancel(false)
-                .setContentTitle(context.getString(R.string.moving))
-                .setContentText(toPath)
-                .setOngoing(true)
-//                .addAction(android.R.drawable.ic_menu_close_clear_cancel,
-//                        context.getString(android.R.string.cancel), null)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setSmallIcon(R.drawable.ic_stat_notify_paste)
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(context.getResources().getString(R.string.notif_moving_item,
-                                fileBeingMoved.getName(), toPath)))
-                .setTicker(context.getString(R.string.moving))
-                .setOnlyAlertOnce(true)
-                .build();
-
-        storeStartTimeIfNeeded(notifId);
-
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(notifId, not);
-    }
-
-    public static void showMoveDoneNotification(boolean success, int notifId,
-                                                String toPath, Context context) {
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (!shouldShowDoneNotification(notifId, success)) {
-            notificationManager.cancel(notifId);
-        } else {
-            Intent browseIntent = new Intent(context, FileManagerActivity.class);
-            browseIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    | Intent.FLAG_ACTIVITY_NEW_TASK);
-            browseIntent.setData(Uri.fromFile(new File(toPath)));
-
-            Notification not = new NotificationCompat.Builder(context)
-                    .setAutoCancel(true)
-                    .setContentTitle(context.getString(success ? R.string.moved : R.string.move_error))
-                    .setContentText(toPath)
-                    .setContentIntent(getActivity(context, 0, browseIntent, FLAG_CANCEL_CURRENT))
-                    .setOngoing(false)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setSmallIcon(R.drawable.ic_stat_notify_paste_5)
-                    .setTicker(context.getString(success ? R.string.moved : R.string.move_error))
-                    .setOnlyAlertOnce(true)
-                    .build();
-            notificationManager.notify(notifId, not);
-        }
-    }
-
     public static void showNotEnoughSpaceNotification(long spaceNeeded, List<FileHolder> files,
                                                       String toPath, Context context) {
         Notification not = new NotificationCompat.Builder(context)

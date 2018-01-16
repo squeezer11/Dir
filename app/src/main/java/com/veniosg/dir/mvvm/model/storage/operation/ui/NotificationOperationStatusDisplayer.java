@@ -38,10 +38,21 @@ public class NotificationOperationStatusDisplayer implements OperationStatusDisp
     }
 
     @Override
+    public void showCopyProgress(int operationId, File destDir, File copying, int progress, int max) {
+        Notification notification = generateOperationProgressNotification(
+                context.getString(R.string.copying),
+                context.getString(R.string.notif_copying_item, copying.getName(), destDir.getAbsolutePath()),
+                copying,
+                progress, max);
+
+        show(operationId, notification);
+    }
+
+    @Override
     public void showCopySuccess(int operationId, File destDir) {
         if (isLongOperation(operationId)) {
             String msg = context.getString(R.string.copied);
-            Notification notification = generateCopyDoneNotification(destDir, msg);
+            Notification notification = generateOperationDoneNotification(destDir, msg);
             show(operationId, notification);
         } else {
             hide(operationId);
@@ -53,34 +64,66 @@ public class NotificationOperationStatusDisplayer implements OperationStatusDisp
     @Override
     public void showCopyFailure(int operationId, File destDir) {
         String msg = context.getString(R.string.copy_error);
-        Notification notification = generateCopyDoneNotification(destDir, msg);
+        Notification notification = generateOperationDoneNotification(destDir, msg);
         show(operationId, notification);
 
         clearOperationTimer(operationId);
     }
 
     @Override
-    public void showCopyProgress(int operationId, File destDir, File copying, int progress, int max) {
-        Notification notification = new NotificationCompat.Builder(context)
+    public void showMoveProgress(int operationId, File destDir, File moving, int progress, int max) {
+        Notification notification = generateOperationProgressNotification(
+                context.getString(R.string.moving),
+                context.getString(R.string.notif_moving_item, moving.getName(), destDir.getAbsolutePath()),
+                moving,
+                progress, max);
+
+        show(operationId, notification);
+    }
+
+    @Override
+    public void showMoveSuccess(int operationId, File destDir) {
+        if (isLongOperation(operationId)) {
+            String msg = context.getString(R.string.moved);
+            Notification notification = generateOperationDoneNotification(destDir, msg);
+            show(operationId, notification);
+        } else {
+            hide(operationId);
+        }
+
+        clearOperationTimer(operationId);
+    }
+
+    @Override
+    public void showMoveFailure(int operationId, File destDir) {
+        String msg = context.getString(R.string.move_error);
+        Notification notification = generateOperationDoneNotification(destDir, msg);
+        show(operationId, notification);
+
+        clearOperationTimer(operationId);
+    }
+
+    private Notification generateOperationProgressNotification(String title,
+                                                               String longText,
+                                                               File operatingOn,
+                                                               int progress, int max) {
+        return new NotificationCompat.Builder(context)
                 .setAutoCancel(false)
-                .setContentTitle(context.getString(R.string.copying))
-                .setContentText(copying.getAbsolutePath())
+                .setContentTitle(title)
+                .setContentText(operatingOn.getName())
                 .setProgress(max, progress, false)
                 .setOngoing(true)
                 .setPriority(PRIORITY_HIGH)
                 .setSmallIcon(R.drawable.ic_stat_notify_paste)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(context.getResources().getString(R.string.notif_copying_item,
-                                copying.getName(), destDir.getAbsolutePath())))
-                .setTicker(context.getString(R.string.copying))
+                        .bigText(longText))
+                .setTicker(title)
                 .setOnlyAlertOnce(true)
                 .build();
-
-        show(operationId, notification);
     }
 
     @NonNull
-    private Notification generateCopyDoneNotification(File destDir, String msg) {
+    private Notification generateOperationDoneNotification(File destDir, String msg) {
         return new NotificationCompat.Builder(context)
                 .setAutoCancel(true)
                 .setContentTitle(msg)
