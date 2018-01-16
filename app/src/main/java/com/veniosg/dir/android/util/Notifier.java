@@ -27,6 +27,7 @@ import android.util.SparseLongArray;
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.activity.FileManagerActivity;
 import com.veniosg.dir.mvvm.model.FileHolder;
+import com.veniosg.dir.mvvm.model.storage.operation.ui.NotificationOperationStatusDisplayer;
 
 import java.io.File;
 import java.util.List;
@@ -35,6 +36,9 @@ import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
 import static android.app.PendingIntent.getActivity;
 import static java.lang.System.currentTimeMillis;
 
+/**
+ * @deprecated Use {@link NotificationOperationStatusDisplayer} instead.
+ */
 public abstract class Notifier {
     private static final int DONE_NOTIF_LOWER_BOUND = 500;
 
@@ -46,61 +50,6 @@ public abstract class Notifier {
     @Override
     protected Object clone() throws CloneNotSupportedException {
         return super.clone();
-    }
-
-    public static void showCopyProgressNotification(int filesCopied, int fileCount, int notifId,
-                                                    File fileBeingCopied, String toPath, Context context) {
-        Notification not = new NotificationCompat.Builder(context)
-                .setAutoCancel(false)
-                .setContentTitle(context.getString(R.string.copying))
-                .setContentText(fileBeingCopied.getAbsolutePath())
-                .setProgress(fileCount, filesCopied, false)
-                .setOngoing(true)
-//                .addAction(android.R.drawable.ic_menu_close_clear_cancel,
-//                        context.getString(android.R.string.cancel), null)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setSmallIcon(R.drawable.ic_stat_notify_paste)
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText(context.getResources().getString(R.string.notif_copying_item,
-                                fileBeingCopied.getName(), toPath)))
-                .setTicker(context.getString(R.string.copying))
-                .setOnlyAlertOnce(true)
-                .build();
-
-        storeStartTimeIfNeeded(notifId);
-
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(notifId, not);
-    }
-
-    public static void showCopyDoneNotification(boolean success, int notId,
-                                                String toPath, Context context) {
-        NotificationManager notificationManager = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (!shouldShowDoneNotification(notId, success)) {
-            notificationManager.cancel(notId);
-        } else {
-            Intent browseIntent = new Intent(context, FileManagerActivity.class);
-            browseIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    | Intent.FLAG_ACTIVITY_NEW_TASK);
-            browseIntent.setData(Uri.fromFile(new File(toPath)));
-
-            Notification not = new NotificationCompat.Builder(context)
-                    .setAutoCancel(true)
-                    .setContentTitle(context.getString(success ? R.string.copied : R.string.copy_error))
-                    .setContentText(toPath)
-                    .setContentIntent(getActivity(context, 0, browseIntent,
-                            FLAG_CANCEL_CURRENT))
-                    .setOngoing(false)
-                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .setSmallIcon(R.drawable.ic_stat_notify_paste_5)
-                    .setTicker(context.getString(success ? R.string.copied : R.string.copy_error))
-                    .setOnlyAlertOnce(true)
-                    .build();
-            notificationManager.notify(notId, not);
-        }
     }
 
     public static void showMoveProgressNotification(int filesMoved, int fileCount, int notifId,

@@ -23,18 +23,19 @@ import android.net.Uri;
 import android.os.StatFs;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
+import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.operation.CopyOperation;
 import com.veniosg.dir.mvvm.model.storage.operation.MoveOperation;
-import com.veniosg.dir.mvvm.model.FileHolder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.veniosg.dir.mvvm.model.storage.operation.argument.CopyArguments.copyArgs;
-import static com.veniosg.dir.mvvm.model.storage.operation.argument.MoveArguments.moveArgs;
 import static com.veniosg.dir.android.util.FileUtils.folderSize;
 import static com.veniosg.dir.android.util.Notifier.showNotEnoughSpaceNotification;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.CopyArguments.copyArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.argument.MoveArguments.moveArgs;
+import static com.veniosg.dir.mvvm.model.storage.operation.ui.OperationStatusDisplayerInjector.operationStatusDisplayer;
 
 /**
  * To use, call the copyTo and moveTo static methods with the appropriate parameters.
@@ -47,8 +48,6 @@ import static com.veniosg.dir.android.util.Notifier.showNotEnoughSpaceNotificati
  * </ol>
  */
 public class CopyService extends IntentService {
-    private static final int COPY_BUFFER_SIZE = 32 * 1024;
-
     private static final String ACTION_COPY = "com.veniosg.dir.action.COPY";
     private static final String ACTION_MOVE = "com.veniosg.dir.action.MOVE";
     private static final String EXTRA_FILES = "com.veniosg.dir.action.FILES";
@@ -87,11 +86,11 @@ public class CopyService extends IntentService {
     }
 
     private void copy(final List<FileHolder> files, final File to) {
-        new CopyOperation(this).invoke(copyArgs(files, to));
+        new CopyOperation(this, operationStatusDisplayer(this)).invoke(copyArgs(files, to));
     }
 
     private void move(List<FileHolder> files, File to) {
-        new MoveOperation(this).invoke(moveArgs(files, to));
+        new MoveOperation(this, operationStatusDisplayer(this)).invoke(moveArgs(files, to));
     }
 
     private static long spaceRemainingAfterCopy(List<FileHolder> of, File on) {

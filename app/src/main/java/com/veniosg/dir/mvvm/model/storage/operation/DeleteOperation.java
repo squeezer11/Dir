@@ -20,23 +20,22 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
-import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.FileHolder;
+import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.DeleteArguments;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.findFile;
 import static com.veniosg.dir.android.util.FileUtils.delete;
+import static com.veniosg.dir.android.util.FileUtils.getPathsUnder;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.findFile;
 
 public class DeleteOperation extends FileOperation<DeleteArguments> {
     private final Context context;
@@ -131,16 +130,5 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
         } else {
             runnable.run();
         }
-    }
-
-    @NonNull
-    private List<String> getPathsUnder(File file) {
-        List<String> paths = new ArrayList<>();
-        if (file.isDirectory()) {
-            MediaScannerUtils.getPathsOfFolder(paths, file);
-        } else {
-            paths.add(file.getAbsolutePath());
-        }
-        return paths;
     }
 }

@@ -422,4 +422,15 @@ public class FileUtils {
         int rootsCount = externalStorageRoots.size();
         return unmodifiableList(externalStorageRoots);
     }
+
+    @NonNull
+    public static List<String> getPathsUnder(File file) {
+        List<String> paths = new ArrayList<>();
+        if (file.isDirectory()) {
+            MediaScannerUtils.getPathsOfFolder(paths, file);
+        } else {
+            paths.add(file.getAbsolutePath());
+        }
+        return paths;
+    }
 }
