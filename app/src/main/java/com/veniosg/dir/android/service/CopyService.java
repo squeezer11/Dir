@@ -33,6 +33,7 @@ import java.util.List;
 
 import static com.veniosg.dir.android.util.FileUtils.folderSize;
 import static com.veniosg.dir.android.util.Notifier.showNotEnoughSpaceNotification;
+import static com.veniosg.dir.mvvm.model.storage.operation.FileOperationRunnerInjector.operationRunner;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.CopyArguments.copyArgs;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.MoveArguments.moveArgs;
 import static com.veniosg.dir.mvvm.model.storage.operation.ui.OperationStatusDisplayerInjector.operationStatusDisplayer;
@@ -86,11 +87,11 @@ public class CopyService extends IntentService {
     }
 
     private void copy(final List<FileHolder> files, final File to) {
-        new CopyOperation(this, operationStatusDisplayer(this)).invoke(copyArgs(files, to));
+        operationRunner(this).run(new CopyOperation(this, operationStatusDisplayer(this)), copyArgs(files, to));
     }
 
     private void move(List<FileHolder> files, File to) {
-        new MoveOperation(this, operationStatusDisplayer(this)).invoke(moveArgs(files, to));
+        operationRunner(this).run(new MoveOperation(this, operationStatusDisplayer(this)), moveArgs(files, to));
     }
 
     private static long spaceRemainingAfterCopy(List<FileHolder> of, File on) {

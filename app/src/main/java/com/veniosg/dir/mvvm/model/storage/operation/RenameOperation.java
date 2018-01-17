@@ -20,29 +20,29 @@ import android.content.Context;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
-import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.RenameArguments;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.findFile;
 import static com.veniosg.dir.android.util.MediaScannerUtils.getPathsOfFolder;
+import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.findFile;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
     private final Context context;
+    private final ToastFactory toastFactory;
     private List<String> affectedPaths = new ArrayList<>();
 
-    public RenameOperation(Context context) {
-        super(new ExternalStorageAccessManager(context), new ToastFactory(context));
+    public RenameOperation(Context context, ToastFactory toastFactory) {
         this.context = context;
+        this.toastFactory = toastFactory;
     }
 
     @Override
-    protected boolean operate(RenameArguments args) {
+    public boolean operate(RenameArguments args) {
         File from = args.getFileToRename();
         File dest = args.getTarget();
 
@@ -50,7 +50,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
     }
 
     @Override
-    protected boolean operateSaf(RenameArguments args) {
+    public boolean operateSaf(RenameArguments args) {
         File from = args.getFileToRename();
         File dest = args.getTarget();
 
@@ -75,7 +75,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
     @Override
     protected void onResult(boolean success, RenameArguments args) {
         if (success) {
-            getToastFactory().renameSuccess().show();
+            toastFactory.renameSuccess().show();
 
             File dest = args.getTarget();
             FileListFragment.refresh(context, dest.getParentFile());
@@ -86,7 +86,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
                 MediaScannerUtils.informFolderAdded(context, dest);
             }
         } else {
-            getToastFactory().renameFailure().show();
+            toastFactory.renameFailure().show();
         }
     }
 
@@ -99,7 +99,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
     }
 
     @Override
-    protected boolean needsWriteAccess() {
+    public boolean needsWriteAccess() {
         return true;
     }
 }

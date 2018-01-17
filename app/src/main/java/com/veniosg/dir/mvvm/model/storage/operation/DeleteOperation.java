@@ -27,7 +27,6 @@ import com.veniosg.dir.android.fragment.FileListFragment;
 import com.veniosg.dir.android.ui.toast.ToastFactory;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.FileHolder;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.DeleteArguments;
 
 import java.io.File;
@@ -44,7 +43,6 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     private ProgressDialog dialog;
 
     public DeleteOperation(Context context) {
-        super(new ExternalStorageAccessManager(context), new ToastFactory(context));
         this.mainThreadHandler = new Handler(context.getMainLooper());
         this.toastFactory = new ToastFactory(context);
         this.context = context.getApplicationContext();
@@ -53,7 +51,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
-    protected boolean operate(DeleteArguments args) {
+    public boolean operate(DeleteArguments args) {
         boolean allSucceeded = true;
 
         for (FileHolder fh : args.getVictims()) {
@@ -69,7 +67,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
-    protected boolean operateSaf(DeleteArguments args) {
+    public boolean operateSaf(DeleteArguments args) {
         boolean allSucceeded = true;
 
         for (FileHolder fh : args.getVictims()) {
@@ -85,7 +83,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
-    protected void onStartOperation(DeleteArguments args) {
+    public void onStartOperation(DeleteArguments args) {
         runOnUi(() -> {
             dialog.setCanceledOnTouchOutside(false);
             dialog.setCancelable(false);
@@ -96,7 +94,7 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
-    protected void onResult(boolean success, DeleteArguments args) {
+    public void onResult(boolean success, DeleteArguments args) {
         runOnUi(() -> {
             if (success) {
                 toastFactory.deleteSuccess().show();
@@ -110,17 +108,17 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     }
 
     @Override
-    protected void onAccessDenied() {
+    public void onAccessDenied() {
         runOnUi(() -> dialog.dismiss());
     }
 
     @Override
-    protected void onRequestingAccess() {
+    public void onRequestingAccess() {
         runOnUi(() -> dialog.cancel());
     }
 
     @Override
-    protected boolean needsWriteAccess() {
+    public boolean needsWriteAccess() {
         return true;
     }
 

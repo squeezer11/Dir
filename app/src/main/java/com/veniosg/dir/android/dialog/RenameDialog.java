@@ -18,6 +18,7 @@ package com.veniosg.dir.android.dialog;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -29,12 +30,13 @@ import android.widget.LinearLayout;
 
 import com.veniosg.dir.IntentConstants;
 import com.veniosg.dir.R;
-import com.veniosg.dir.mvvm.model.storage.operation.argument.RenameArguments;
-import com.veniosg.dir.mvvm.model.storage.operation.RenameOperation;
+import com.veniosg.dir.android.ui.toast.ToastFactory;
 import com.veniosg.dir.mvvm.model.FileHolder;
+import com.veniosg.dir.mvvm.model.storage.operation.RenameOperation;
 
 import static android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
 import static android.view.inputmethod.EditorInfo.IME_ACTION_GO;
+import static com.veniosg.dir.mvvm.model.storage.operation.FileOperationRunnerInjector.operationRunner;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.RenameArguments.renameArguments;
 
 public class RenameDialog extends DialogFragment {
@@ -83,8 +85,10 @@ public class RenameDialog extends DialogFragment {
         boolean res = false;
 
         if (newName.length() > 0) {
-            RenameArguments args = renameArguments(mFileHolder.getFile(), newName);
-            new RenameOperation(getContext()).invoke(args);
+            Context c = getContext();
+            operationRunner(c).run(
+                    new RenameOperation(c, new ToastFactory(c)),
+                    renameArguments(mFileHolder.getFile(), newName));
         }
     }
 }

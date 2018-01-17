@@ -19,7 +19,6 @@ package com.veniosg.dir.mvvm.model.storage.operation;
 import android.content.Context;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.android.ui.toast.ToastFactory;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.CreateDirectoryArguments;
 
@@ -32,31 +31,30 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
     private final ToastFactory toastFactory;
 
     public CreateDirectoryOperation(Context context) {
-        super(new ExternalStorageAccessManager(context), new ToastFactory(context));
         this.context = context;
         this.toastFactory = new ToastFactory(context);
     }
 
     @Override
-    protected boolean operate(CreateDirectoryArguments args) {
+    public boolean operate(CreateDirectoryArguments args) {
         File dest = args.getTarget();
 
         return dest.exists() || dest.mkdirs();
     }
 
     @Override
-    protected boolean operateSaf(CreateDirectoryArguments args) {
+    public boolean operateSaf(CreateDirectoryArguments args) {
         File dest = args.getTarget();
 
         return dest.exists() || createDirectory(context, dest) != null;
     }
 
     @Override
-    protected void onStartOperation(CreateDirectoryArguments args) {
+    public void onStartOperation(CreateDirectoryArguments args) {
     }
 
     @Override
-    protected void onResult(boolean success, CreateDirectoryArguments args) {
+    public void onResult(boolean success, CreateDirectoryArguments args) {
         if (success) {
             toastFactory.createDirectorySuccess().show();
             FileListFragment.refresh(context, args.getTarget().getParentFile());
@@ -66,15 +64,15 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
     }
 
     @Override
-    protected void onAccessDenied() {
+    public void onAccessDenied() {
     }
 
     @Override
-    protected void onRequestingAccess() {
+    public void onRequestingAccess() {
     }
 
     @Override
-    protected boolean needsWriteAccess() {
+    public boolean needsWriteAccess() {
         return true;
     }
 }

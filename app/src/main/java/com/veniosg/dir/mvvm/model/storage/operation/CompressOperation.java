@@ -22,12 +22,10 @@ import android.support.annotation.Nullable;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.ui.toast.ToastFactory;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.util.Notifier;
 import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.DocumentFileUtils;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.CompressArguments;
 
 import java.io.BufferedOutputStream;
@@ -53,19 +51,18 @@ public class CompressOperation extends FileOperation<CompressArguments> {
     private final Context context;
 
     public CompressOperation(Context context) {
-        super(new ExternalStorageAccessManager(context), new ToastFactory(context));
         this.context = context;
     }
 
     @Override
-    protected boolean operate(CompressArguments args) {
+    public boolean operate(CompressArguments args) {
         File to = args.getTarget();
         BufferedOutputStream outStream = outputStreamFor(to);
         return outStream != null && compressTo(outStream, args.getToCompress(), to);
     }
 
     @Override
-    protected boolean operateSaf(CompressArguments args) {
+    public boolean operateSaf(CompressArguments args) {
         File to = args.getTarget();
         DocumentFile toSaf = createFile(context, to, "application/zip");
         BufferedOutputStream outStream = outputStreamFor(toSaf);
@@ -73,30 +70,30 @@ public class CompressOperation extends FileOperation<CompressArguments> {
     }
 
     @Override
-    protected void onStartOperation(CompressArguments args) {
+    public void onStartOperation(CompressArguments args) {
     }
 
     @Override
-    protected void onResult(boolean success, CompressArguments args) {
+    public void onResult(boolean success, CompressArguments args) {
         File target = args.getTarget();
         if (!success) safAwareDelete(context, target);
 
         MediaScannerUtils.informFileAdded(context, target);
-        Notifier.showCompressDoneNotification(success, getId(), target, context);
+        Notifier.showCompressDoneNotification(success, id, target, context);
         FileListFragment.refresh(context, target.getParentFile());
     }
 
     @Override
-    protected void onAccessDenied() {
+    public void onAccessDenied() {
     }
 
     @Override
-    protected void onRequestingAccess() {
-        clearNotification(getId(), context);
+    public void onRequestingAccess() {
+        clearNotification(id, context);
     }
 
     @Override
-    protected boolean needsWriteAccess() {
+    public boolean needsWriteAccess() {
         return true;
     }
 
@@ -126,7 +123,7 @@ public class CompressOperation extends FileOperation<CompressArguments> {
         int fileCount = countFilesUnder(toBeCompressed);
         try (ZipOutputStream zipStream = new ZipOutputStream(new BufferedOutputStream(outStream))) {
             for (FileHolder file : toBeCompressed) {
-                filesCompressed = compressCore(getId(), zipStream, file.getFile(),
+                filesCompressed = compressCore(id, zipStream, file.getFile(),
                         null, filesCompressed, fileCount, targetArchive);
             }
         } catch (IOException e) {

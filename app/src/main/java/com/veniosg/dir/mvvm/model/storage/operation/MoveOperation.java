@@ -18,11 +18,8 @@ package com.veniosg.dir.mvvm.model.storage.operation;
 
 import android.content.Context;
 
-import com.veniosg.dir.android.ui.toast.ToastFactory;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.FileHolder;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
-import com.veniosg.dir.mvvm.model.storage.operation.Copier.DocumentFileCopier;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.MoveArguments;
 import com.veniosg.dir.mvvm.model.storage.operation.ui.OperationStatusDisplayer;
 
@@ -42,46 +39,45 @@ public class MoveOperation extends FileOperation<MoveArguments> {
     private final OperationStatusDisplayer statusDisplayer;
 
     public MoveOperation(Context context, OperationStatusDisplayer statusDisplayer) {
-        super(new ExternalStorageAccessManager(context), new ToastFactory(context));
         this.context = context.getApplicationContext();
         this.statusDisplayer = statusDisplayer;
     }
 
     @Override
-    protected boolean operate(MoveArguments args) {
+    public boolean operate(MoveArguments args) {
         return new NormalMover().move(args);
     }
 
     @Override
-    protected boolean operateSaf(MoveArguments args) {
+    public boolean operateSaf(MoveArguments args) {
         return new SafMover().move(args);
     }
 
     @Override
-    protected void onStartOperation(MoveArguments args) {
+    public void onStartOperation(MoveArguments args) {
     }
 
     @Override
-    protected void onResult(boolean success, MoveArguments args) {
+    public void onResult(boolean success, MoveArguments args) {
         if (success) {
-            statusDisplayer.showMoveSuccess(getId(), args.getTarget());
+            statusDisplayer.showMoveSuccess(id, args.getTarget());
             refresh(context, args.getTarget());
         } else {
-            statusDisplayer.showMoveFailure(getId(), args.getTarget());
+            statusDisplayer.showMoveFailure(id, args.getTarget());
         }
     }
 
     @Override
-    protected void onAccessDenied() {
+    public void onAccessDenied() {
     }
 
     @Override
-    protected void onRequestingAccess() {
-        clearNotification(getId(), context);
+    public void onRequestingAccess() {
+        clearNotification(id, context);
     }
 
     @Override
-    protected boolean needsWriteAccess() {
+    public boolean needsWriteAccess() {
         return true;
     }
 
@@ -95,7 +91,7 @@ public class MoveOperation extends FileOperation<MoveArguments> {
             File target = args.getTarget();
             List<FileHolder> files = args.getFilesToMove();
             for (FileHolder fh : files) {
-                statusDisplayer.showMoveProgress(getId(), target, fh.getFile(),
+                statusDisplayer.showMoveProgress(id, target, fh.getFile(),
                         fileIndex++, files.size());
 
                 from = fh.getFile().getAbsoluteFile();
@@ -132,9 +128,9 @@ public class MoveOperation extends FileOperation<MoveArguments> {
     private class SafMover extends Mover {
         @Override
         protected boolean moveSingle(FileHolder what, File futureWhat) {
-            boolean copySucceeded = new DocumentFileCopier(context, noOpStatusDisplayer(), getId())
-                    .copy(copyArgs(singletonList(what), futureWhat.getParentFile()));
-            // Only delete if full tree was copied. Spare files are bad, disappearing files is worse
+            boolean copySucceeded = new CopyOperation(context, noOpStatusDisplayer())
+                    .operateSaf(copyArgs(singletonList(what), futureWhat.getParentFile()));
+            // Only delete if full tree was copied. Spare files are bad, disappearing files are worse
             return copySucceeded && safAwareDelete(context, what.getFile());
         }
     }

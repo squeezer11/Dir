@@ -21,11 +21,9 @@ import android.support.annotation.NonNull;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.ui.toast.ToastFactory;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.android.util.Notifier;
 import com.veniosg.dir.mvvm.model.FileHolder;
-import com.veniosg.dir.mvvm.model.storage.access.ExternalStorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.ExtractArguments;
 
 import java.io.BufferedInputStream;
@@ -56,45 +54,44 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
     private final Context context;
 
     public ExtractOperation(Context context) {
-        super(new ExternalStorageAccessManager(context), new ToastFactory(context));
         this.context = context;
     }
 
     @Override
-    protected boolean operate(ExtractArguments args) {
+    public boolean operate(ExtractArguments args) {
         return new NormalExtractor().extract(args);
     }
 
     @Override
-    protected boolean operateSaf(ExtractArguments args) {
+    public boolean operateSaf(ExtractArguments args) {
         return new SafExtractor().extract(args);
     }
 
     @Override
-    protected void onStartOperation(ExtractArguments args) {
+    public void onStartOperation(ExtractArguments args) {
     }
 
     @Override
-    protected void onResult(boolean success, ExtractArguments args) {
+    public void onResult(boolean success, ExtractArguments args) {
         File to = args.getTarget();
         if (!success) safAwareDelete(context, to);
 
         MediaScannerUtils.informFileAdded(context, to);
-        Notifier.showExtractDoneNotification(success, getId(), to, context);
+        Notifier.showExtractDoneNotification(success, id, to, context);
         FileListFragment.refresh(context, to.getParentFile());
     }
 
     @Override
-    protected void onAccessDenied() {
+    public void onAccessDenied() {
     }
 
     @Override
-    protected void onRequestingAccess() {
-        clearNotification(getId(), context);
+    public void onRequestingAccess() {
+        clearNotification(id, context);
     }
 
     @Override
-    protected boolean needsWriteAccess() {
+    public boolean needsWriteAccess() {
         return true;
     }
 
@@ -119,7 +116,7 @@ public class ExtractOperation extends FileOperation<ExtractArguments> {
                     showExtractProgressNotification(extractedCount, fileCount,
                             getLastPathSegment(entry.getName()),
                             getLastPathSegment(zipFile.getName()),
-                            getId(), context);
+                            id, context);
 
                     boolean extractSuccessful = extractEntry(zipFile, entry, dstDirectory);
                     if (!extractSuccessful) return false;

@@ -21,14 +21,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 
+import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.operation.CompressOperation;
 import com.veniosg.dir.mvvm.model.storage.operation.ExtractOperation;
-import com.veniosg.dir.mvvm.model.FileHolder;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.veniosg.dir.mvvm.model.storage.operation.FileOperationRunnerInjector.operationRunner;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.CompressArguments.compressArgs;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.ExtractArguments.extractArgs;
 import static java.util.Collections.singletonList;
@@ -48,9 +49,9 @@ public class ZipService extends IntentService {
         File to = new File(intent.getData().getPath());
 
         if (ACTION_COMPRESS.equals(intent.getAction())) {
-            new CompressOperation(this).invoke(compressArgs(to, files));
+            operationRunner(this).run(new CompressOperation(this), compressArgs(to, files));
         } else if (ACTION_EXTRACT.equals(intent.getAction())) {
-            new ExtractOperation(this).invoke(extractArgs(to, files));
+            operationRunner(this).run(new ExtractOperation(this), extractArgs(to, files));
         }
     }
 

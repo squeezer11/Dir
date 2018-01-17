@@ -20,9 +20,10 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 
-import com.veniosg.dir.mvvm.model.storage.operation.DeleteOperation;
 import com.veniosg.dir.mvvm.model.FileHolder;
+import com.veniosg.dir.mvvm.model.storage.operation.DeleteOperation;
 
+import static com.veniosg.dir.mvvm.model.storage.operation.FileOperationRunnerInjector.operationRunner;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.DeleteArguments.deleteArgs;
 
 class DeleteAsyncTask extends AsyncTask<FileHolder, Void, Void> {
@@ -38,8 +39,7 @@ class DeleteAsyncTask extends AsyncTask<FileHolder, Void, Void> {
 
     @Override
     protected Void doInBackground(FileHolder... params) {
-        new DeleteOperation(context)
-                .invoke(deleteArgs(params[0].getFile().getParentFile(), params));
+        operationRunner(context).run(new DeleteOperation(context), deleteArgs(params[0].getFile().getParentFile(), params));
         return null;
     }
 

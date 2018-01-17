@@ -36,6 +36,7 @@ import java.io.File;
 import static android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE;
 import static android.view.inputmethod.EditorInfo.IME_ACTION_GO;
 import static com.veniosg.dir.IntentConstants.EXTRA_DIR_PATH;
+import static com.veniosg.dir.mvvm.model.storage.operation.FileOperationRunnerInjector.operationRunner;
 import static com.veniosg.dir.mvvm.model.storage.operation.argument.CreateDirectoryArguments.createDirectoryArguments;
 
 public class CreateDirectoryDialog extends DialogFragment {
@@ -80,7 +81,7 @@ public class CreateDirectoryDialog extends DialogFragment {
             File parentPath = new File(getArguments().getString(EXTRA_DIR_PATH));
             File tbc = new File(parentPath, text.toString());
             if (!tbc.exists()) {
-                new CreateDirectoryOperation(c).invoke(createDirectoryArguments(tbc));
+                operationRunner(c).run(new CreateDirectoryOperation(c), createDirectoryArguments(tbc));
                 dismiss();
             }
         }
