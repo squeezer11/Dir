@@ -398,6 +398,7 @@ public class FileUtils {
      *
      * @return A list of external SD card paths.
      */
+    @NonNull
     public static List<String> getExtSdCardPaths(Context context) {
         File[] externalStorageFilesDirs = context.getExternalFilesDirs(null);
         File primaryStorageFilesDir = context.getExternalFilesDir(null);
