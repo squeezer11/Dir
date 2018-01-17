@@ -19,7 +19,7 @@ package com.veniosg.dir.mvvm.model.storage.operation;
 import android.content.Context;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.ui.toast.ToastDisplayer;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.CreateDirectoryArguments;
 
 import java.io.File;
@@ -28,11 +28,11 @@ import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.createDirecto
 
 public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArguments> {
     private final Context context;
-    private final ToastFactory toastFactory;
+    private final ToastDisplayer toastDisplayer;
 
     public CreateDirectoryOperation(Context context) {
         this.context = context;
-        this.toastFactory = new ToastFactory(context);
+        this.toastDisplayer = new ToastDisplayer(context);
     }
 
     @Override
@@ -56,10 +56,10 @@ public class CreateDirectoryOperation extends FileOperation<CreateDirectoryArgum
     @Override
     public void onResult(boolean success, CreateDirectoryArguments args) {
         if (success) {
-            toastFactory.createDirectorySuccess().show();
+            toastDisplayer.createDirectorySuccess();
             FileListFragment.refresh(context, args.getTarget().getParentFile());
         } else {
-            toastFactory.createDirectoryFailure().show();
+            toastDisplayer.createDirectoryFailure();
         }
     }
 

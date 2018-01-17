@@ -16,25 +16,26 @@ public class FakeStorageAccessManager implements StorageAccessManager {
 
     private Behavior behavior = Behavior.ERROR;
     private boolean writeAccess = false;
+    private boolean safBased = false;
     private boolean listened = true;
 
     public static FakeStorageAccessManager aFakeStorageAccessManager() {
         return new FakeStorageAccessManager();
     }
 
-    public FakeStorageAccessManager thatAlwaysGrantsAccess(){
+    public FakeStorageAccessManager thatAlwaysGrantsAccess() {
         behavior = Behavior.GRANT;
         listened = false;
         return this;
     }
 
-    public FakeStorageAccessManager thatAlwaysDeniesAccess(){
+    public FakeStorageAccessManager thatAlwaysDeniesAccess() {
         behavior = Behavior.DENY;
         listened = false;
         return this;
     }
 
-    public FakeStorageAccessManager thatAlwaysErrors(){
+    public FakeStorageAccessManager thatAlwaysErrors() {
         behavior = Behavior.ERROR;
         listened = false;
         return this;
@@ -47,6 +48,11 @@ public class FakeStorageAccessManager implements StorageAccessManager {
 
     public FakeStorageAccessManager thatHasWriteAccess() {
         writeAccess = true;
+        return this;
+    }
+
+    public FakeStorageAccessManager thatIsSafBased() {
+        safBased = true;
         return this;
     }
 
@@ -78,6 +84,6 @@ public class FakeStorageAccessManager implements StorageAccessManager {
 
     @Override
     public boolean isSafBased() {
-        return false;
+        return safBased;
     }
 }

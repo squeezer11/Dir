@@ -1,11 +1,11 @@
 package com.veniosg.dir.mvvm.model.storage.operation;
 
-import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.ui.toast.ToastDisplayer;
 import com.veniosg.dir.mvvm.model.storage.access.StorageAccessManager;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 
 import java.io.File;
@@ -13,8 +13,8 @@ import java.io.File;
 import static com.veniosg.dir.mvvm.model.storage.operation.FakeStorageAccessManager.aFakeStorageAccessManager;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
@@ -28,7 +28,7 @@ public class FileOperationRunnerTest {
     @Mock
     private StorageAccessManager mockStorageAccessManager;
     @Mock
-    private ToastFactory mockToastFactory;
+    private ToastDisplayer mockToastDisplayer;
     @Mock
     private FileOperation<FakeArguments> mockOperation;
     private FileOperationRunner runner;
@@ -37,7 +37,7 @@ public class FileOperationRunnerTest {
     @Before
     public void setUp() {
         initMocks(this);
-        runner = new FileOperationRunner(mockStorageAccessManager, mockToastFactory);
+        runner = new FileOperationRunner(mockStorageAccessManager, mockToastDisplayer);
     }
 
     @Test
@@ -52,7 +52,7 @@ public class FileOperationRunnerTest {
         // Make sure we don't query collaborators unnecessarily as they can be heavy
         verifyNoMoreInteractions(mockOperation);
         verifyZeroInteractions(mockStorageAccessManager);
-        verifyZeroInteractions(mockToastFactory);
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class FileOperationRunnerTest {
         verify(mockOperation).onResult(false, fakeArgs);
         verifyNoMoreInteractions(mockOperation);
         verifyZeroInteractions(mockStorageAccessManager);
-        verifyZeroInteractions(mockToastFactory);
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class FileOperationRunnerTest {
         verify(mockStorageAccessManager).requestWriteAccess(any(), any());
         verifyNoMoreInteractions(mockOperation);
         verifyNoMoreInteractions(mockStorageAccessManager);
-        verifyZeroInteractions(mockToastFactory);
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class FileOperationRunnerTest {
         verify(mockOperation).onResult(false, fakeArgs);
         verifyNoMoreInteractions(mockOperation);
         verifyNoMoreInteractions(mockStorageAccessManager);
-        verifyZeroInteractions(mockToastFactory);
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
@@ -129,7 +129,7 @@ public class FileOperationRunnerTest {
         verify(mockOperation).onResult(false, fakeArgs);
         verifyNoMoreInteractions(mockOperation);
         verifyNoMoreInteractions(mockStorageAccessManager);
-        verifyZeroInteractions(mockToastFactory);
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class FileOperationRunnerTest {
 
     @Test
     public void onRequestWriteAccess_callBackWhenDenied() {
-        runner = new FileOperationRunner(fakeStorageAccessManager, mockToastFactory);
+        runner = new FileOperationRunner(fakeStorageAccessManager, mockToastDisplayer);
         givenOperateFails();
         givenOperationNeedsWriteAccess();
         givenNoStorageWriteAccess();
@@ -156,52 +156,57 @@ public class FileOperationRunnerTest {
 
         whenRunnerRuns();
 
-        verify(mockOperation).onStartOperation(fakeArgs);
-        verify(mockOperation).operate(fakeArgs);
-        verify(mockOperation).onRequestingAccess();
-        verify(mockOperation).onAccessDenied();
-        verify(mockOperation, never()).onResult(anyBoolean(), any());
-        verifyZeroInteractions(mockToastFactory);
+        InOrder inorder = inOrder(mockOperation);
+        inorder.verify(mockOperation).onStartOperation(fakeArgs);
+        inorder.verify(mockOperation).operate(fakeArgs);
+        inorder.verify(mockOperation).onRequestingAccess();
+        inorder.verify(mockOperation).onAccessDenied();
+        inorder.verify(mockOperation, never()).onResult(anyBoolean(), any());
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
-    @Ignore
     public void onRequestWriteAccess_trySafWhenGranted() {
-        runner = new FileOperationRunner(fakeStorageAccessManager, mockToastFactory);
+        runner = new FileOperationRunner(fakeStorageAccessManager, mockToastDisplayer);
         givenOperateFails();
         givenOperationNeedsWriteAccess();
         givenNoStorageWriteAccess();
         givenWriteAccessGetsGranted();
+        givenDeviceSafBased();
+        givenOperateSafSucceeds();
 
         whenRunnerRuns();
 
-        // TODO SDCARD Make this verify in order.....?
-        verify(mockOperation, times(2)).onStartOperation(fakeArgs);
-        verify(mockOperation, times(2)).operate(fakeArgs);
-        verify(mockOperation).onRequestingAccess();
-        verify(mockOperation).operateSaf(fakeArgs);
-        verify(mockOperation).onResult(anyBoolean(), any());
-        verifyZeroInteractions(mockToastFactory);
+        InOrder inorder = inOrder(mockOperation);
+        inorder.verify(mockOperation).onStartOperation(fakeArgs);
+        inorder.verify(mockOperation).operate(fakeArgs);
+        inorder.verify(mockOperation).onRequestingAccess();
+        inorder.verify(mockOperation).onStartOperation(fakeArgs);
+        inorder.verify(mockOperation).operate(fakeArgs);
+        inorder.verify(mockOperation).operateSaf(fakeArgs);
+        inorder.verify(mockOperation).onResult(true, fakeArgs);
+        verifyZeroInteractions(mockToastDisplayer);
     }
 
     @Test
-    @Ignore
-    public void onRequestWriteAccess_runAgainAndToastOnError() {
-        runner = new FileOperationRunner(fakeStorageAccessManager, mockToastFactory);
+    public void onRequestWriteAccess_requestsAgainAndToastsOnError() {
+        runner = new FileOperationRunner(fakeStorageAccessManager, mockToastDisplayer);
         givenOperateFails();
         givenOperationNeedsWriteAccess();
         givenNoStorageWriteAccess();
-        givenWriteAccessGetsDenied();
+        givenWriteAccessRequestProducesError();
+        givenDeviceSafBased();
+        givenOperateSafSucceeds();
 
         whenRunnerRuns();
 
-        // TODO SDCARD Make this verify in order.....
-        verify(mockOperation, times(2)).onStartOperation(fakeArgs);
-        verify(mockOperation, times(2)).operate(fakeArgs);
-        verify(mockOperation).onRequestingAccess();
-        verify(mockToastFactory).grantAccessWrongDirectory();
-        verify(mockOperation).operateSaf(fakeArgs);
-        verify(mockOperation).onResult(anyBoolean(), any());
+        InOrder inorder = inOrder(mockOperation, mockToastDisplayer);
+        inorder.verify(mockOperation).onStartOperation(fakeArgs);
+        inorder.verify(mockOperation).operate(fakeArgs);
+        inorder.verify(mockOperation).onRequestingAccess();
+        inorder.verify(mockToastDisplayer).grantAccessWrongDirectory();
+        inorder.verify(mockOperation).onStartOperation(fakeArgs);
+        inorder.verify(mockOperation).onRequestingAccess();
     }
 
     private void givenOperateFails() {
@@ -244,6 +249,7 @@ public class FileOperationRunnerTest {
 
     private void givenDeviceSafBased() {
         when(mockStorageAccessManager.isSafBased()).thenReturn(true);
+        fakeStorageAccessManager.thatIsSafBased();
     }
 
     private void givenDeviceNotSafBased() {

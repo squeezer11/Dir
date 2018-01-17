@@ -24,7 +24,7 @@ import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.R;
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.ui.toast.ToastDisplayer;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.DeleteArguments;
@@ -38,13 +38,13 @@ import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.findFile;
 
 public class DeleteOperation extends FileOperation<DeleteArguments> {
     private final Context context;
-    private final ToastFactory toastFactory;
+    private final ToastDisplayer toastDisplayer;
     private final Handler mainThreadHandler;
     private ProgressDialog dialog;
 
     public DeleteOperation(Context context) {
         this.mainThreadHandler = new Handler(context.getMainLooper());
-        this.toastFactory = new ToastFactory(context);
+        this.toastDisplayer = new ToastDisplayer(context);
         this.context = context.getApplicationContext();
 
         runOnUi(() -> dialog = new ProgressDialog(context));
@@ -97,10 +97,10 @@ public class DeleteOperation extends FileOperation<DeleteArguments> {
     public void onResult(boolean success, DeleteArguments args) {
         runOnUi(() -> {
             if (success) {
-                toastFactory.deleteSuccess().show();
+                toastDisplayer.deleteSuccess();
                 FileListFragment.refresh(context, args.getTarget());
             } else {
-                toastFactory.deleteFailure().show();
+                toastDisplayer.deleteFailure();
             }
 
             dialog.dismiss();

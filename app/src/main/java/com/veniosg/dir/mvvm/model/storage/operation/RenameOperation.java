@@ -20,7 +20,7 @@ import android.content.Context;
 import android.support.v4.provider.DocumentFile;
 
 import com.veniosg.dir.android.fragment.FileListFragment;
-import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.ui.toast.ToastDisplayer;
 import com.veniosg.dir.android.util.MediaScannerUtils;
 import com.veniosg.dir.mvvm.model.storage.operation.argument.RenameArguments;
 
@@ -33,12 +33,12 @@ import static com.veniosg.dir.mvvm.model.storage.DocumentFileUtils.findFile;
 
 public class RenameOperation extends FileOperation<RenameArguments> {
     private final Context context;
-    private final ToastFactory toastFactory;
+    private final ToastDisplayer toastDisplayer;
     private List<String> affectedPaths = new ArrayList<>();
 
-    public RenameOperation(Context context, ToastFactory toastFactory) {
+    public RenameOperation(Context context, ToastDisplayer toastDisplayer) {
         this.context = context;
-        this.toastFactory = toastFactory;
+        this.toastDisplayer = toastDisplayer;
     }
 
     @Override
@@ -75,7 +75,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
     @Override
     protected void onResult(boolean success, RenameArguments args) {
         if (success) {
-            toastFactory.renameSuccess().show();
+            toastDisplayer.renameSuccess();
 
             File dest = args.getTarget();
             FileListFragment.refresh(context, dest.getParentFile());
@@ -86,7 +86,7 @@ public class RenameOperation extends FileOperation<RenameArguments> {
                 MediaScannerUtils.informFolderAdded(context, dest);
             }
         } else {
-            toastFactory.renameFailure().show();
+            toastDisplayer.renameFailure();
         }
     }
 

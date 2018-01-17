@@ -30,7 +30,7 @@ import android.widget.LinearLayout;
 
 import com.veniosg.dir.IntentConstants;
 import com.veniosg.dir.R;
-import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.ui.toast.ToastDisplayer;
 import com.veniosg.dir.mvvm.model.FileHolder;
 import com.veniosg.dir.mvvm.model.storage.operation.RenameOperation;
 
@@ -87,7 +87,7 @@ public class RenameDialog extends DialogFragment {
         if (newName.length() > 0) {
             Context c = getContext();
             operationRunner(c).run(
-                    new RenameOperation(c, new ToastFactory(c)),
+                    new RenameOperation(c, new ToastDisplayer(c)),
                     renameArguments(mFileHolder.getFile(), newName));
         }
     }

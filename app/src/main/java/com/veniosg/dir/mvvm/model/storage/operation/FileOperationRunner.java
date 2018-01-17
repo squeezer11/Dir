@@ -16,7 +16,7 @@
 
 package com.veniosg.dir.mvvm.model.storage.operation;
 
-import com.veniosg.dir.android.ui.toast.ToastFactory;
+import com.veniosg.dir.android.ui.toast.ToastDisplayer;
 import com.veniosg.dir.mvvm.model.storage.access.StorageAccessManager;
 import com.veniosg.dir.mvvm.model.storage.access.StorageAccessManager.AccessPermissionListener;
 
@@ -27,11 +27,11 @@ import com.veniosg.dir.mvvm.model.storage.access.StorageAccessManager.AccessPerm
  */
 public class FileOperationRunner {
     private final StorageAccessManager storageAccessManager;
-    private final ToastFactory toastFactory;
+    private final ToastDisplayer toastDisplayer;
 
-    FileOperationRunner(StorageAccessManager storageAccessManager, ToastFactory toastFactory) {
+    FileOperationRunner(StorageAccessManager storageAccessManager, ToastDisplayer toastDisplayer) {
         this.storageAccessManager = storageAccessManager;
-        this.toastFactory = toastFactory;
+        this.toastDisplayer = toastDisplayer;
     }
 
     public <O extends FileOperation<A>, A extends FileOperation.Arguments> void run(O operation, A args) {
@@ -59,7 +59,7 @@ public class FileOperationRunner {
 
                     @Override
                     public void error() {
-                        toastFactory.grantAccessWrongDirectory().show();
+                        toastDisplayer.grantAccessWrongDirectory();
                         run(operation, args);
                     }
                 });
